@@ -3,7 +3,6 @@ from setting import *
 import sprites as sp
 import camera as c
 
-
 #카메라 생성
 camera = c.Camera(sp.all_sprites,sp.human1)
 #루프
@@ -12,7 +11,6 @@ while RUNNING:
     #fps 설정
     CLOCK.tick(FPS)
     
-
     #종료
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -24,7 +22,7 @@ while RUNNING:
             camera.zoom(event.y)
             
     #카메라 움직이기
-    camera.follow()
+    camera.player_follow()
 
     #스프라이트 업데이트
     sp.all_sprites.update()
@@ -32,5 +30,4 @@ while RUNNING:
     #카메라로 화면 그리기
     camera.draw()
     
-
 pg.quit()
