@@ -8,7 +8,6 @@ class Camera():
         self.sprite_group = sprite_group #그려야 할 스프라이트 그룹
         self.player = player #따라다녀야 할 플레이어
         self.offset = pg.math.Vector2(self.player.vector.x-WIDTH/2,0)
-        self.zoom_scale = 1 #1배 확대
     #player 따라다니기
     def player_follow(self):
         self.offset.x = self.player.vector.x-WIDTH/2
@@ -16,13 +15,6 @@ class Camera():
             self.offset.x = 0
         elif self.offset.x >= BG_WIDTH-WIDTH:
             self.offset.x = BG_WIDTH-WIDTH
-            
-    #TODO:확대,축소(고장남)
-    def zoom(self,wheel):
-        #줌 스케일 확대
-        self.zoom_scale += wheel *0.03
-        if self.zoom_scale < 1:
-            self.zoom_scale = 1        
 
     def draw(self):
         #배경과 모든 스프라이트를 반대방향으로 이동시킨뒤 화면 출력

@@ -106,7 +106,7 @@ class Enemy(pg.sprite.Sprite):
         self.hp = None
         self.damage = None
         self.img = None
-        self.vector = pg.math.Vector2(BG_WIDTH - 10,768 - 140)
+        self.vector = pg.math.Vector2(10,768 - 140)
         self.rect = None
         self.vel = None
         self.stop = 0

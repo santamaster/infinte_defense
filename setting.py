@@ -57,16 +57,37 @@ MINE_HP = 300
 MINE_GOLD_OUTPUT = 10
 MINE_GOLD_COOLDOWN = 1000
 
+
+
+
+def fill(surface, color):
+    new_surface = surface.copy()
+    w, h = surface.get_size()
+    r, g, b = color
+    for x in range(w):
+        for y in range(h):
+            a = new_surface.get_at((x, y))[3]
+            new_surface.set_at((x, y), pg.Color(r, g, b, a))
+    return new_surface
+    
+
 #리소스 파일(폰트,이미지,사운드)
 myfont = pg.font.Font("resources\\font\\NeoDunggeunmoPro-Regular.ttf",30)
 background_img = pg.transform.scale(pg.image.load("resources\\images\\background.png").convert_alpha(),(BG_WIDTH,BG_HEIGHT))
+hp_frame_img = pg.transform.scale(pg.image.load("resources\\images\\hp_bar_frame.png").convert_alpha(),(HP_FRAME_WIDTH,HP_FRAME_HEIGHT))
+
+#플레이어
 human_img = pg.image.load("resources\\images\\human.png").convert_alpha()
 wizard_img = pg.image.load("resources\\images\\human.png").convert_alpha()
-
+#적
 zombie_img = pg.image.load("resources\\images\\zombie.png").convert_alpha()
-#floor_img = pg.image.load("resources\\images\\floor.png").convert_alpha()
-hp_frame_img = pg.transform.scale(pg.image.load("resources\\images\\hp_bar_frame.png").convert_alpha(),(HP_FRAME_WIDTH,HP_FRAME_HEIGHT))
+
+#건물
 wall_img = pg.image.load("resources\\images\\wall.png").convert_alpha()
+wall_red = fill(wall_img,RED)
 canon_img = pg.image.load("resources\\images\\wall.png").convert_alpha()
 canonshot_img = pg.image.load("resources\\images\\wall.png").convert_alpha()
 mine_img = pg.image.load("resources\\images\\wall.png").convert_alpha()
+
+
+#floor_img = pg.image.load("resources\\images\\floor.png").convert_alpha()
