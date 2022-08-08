@@ -26,9 +26,8 @@ class Camera():
 
     def draw(self):
         #배경과 모든 스프라이트를 반대방향으로 이동시킨뒤 화면 출력
-        
         #배경 화면 출력
-        SCREEN.blit(background_img,(-self.offset.x,0))
+        SCREEN.blit(background_img,(-self.offset.x,-self.offset.y))
 
         #스프라이트 그룹 화면 출력
         for sprite in self.sprite_group:
@@ -36,19 +35,25 @@ class Camera():
 
         #-----정보 표시-----#
         #플레이어 hp표시
-        SCREEN.blit(hp_frame_img,(WIDTH-HP_FRAME_WIDTH-HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))#체력바 프레임
-        pg.draw.rect(SCREEN,RED,[WIDTH-HP_FRAME_INTERVAL-HP_FRAME_WIDTH*49/50,HP_FRAME_INTERVAL+HP_FRAME_HEIGHT/10, \
-            self.player.hp/self.player.hp_max*HP_FRAME_WIDTH*24/25,HP_FRAME_HEIGHT*4/5])
-        #fps 표시(선택)
-        msg_fps = myfont.render("fps : {}".format(int((CLOCK.get_fps()))),True,WHITE)
-        SCREEN.blit(msg_fps,(10,30))
+        SCREEN.blit(hp_frame_img,(WIDTH - HP_FRAME_WIDTH - HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))#체력바 프레임
+        pg.draw.rect(SCREEN,RED,[WIDTH - HP_FRAME_INTERVAL - HP_FRAME_WIDTH*49/50,HP_FRAME_INTERVAL + HP_FRAME_HEIGHT/10, \
+            self.player.hp / self.player.hp_max * HP_FRAME_WIDTH*24/25,HP_FRAME_HEIGHT*4/5])
+
+        #현재 골드 표시
+        msg_gold = myfont.render("gold : {}".format(self.player.gold),True,WHITE)
+        SCREEN.blit(msg_gold,(10,10))
 
         #시간 표시(선택)
         tick = pg.time.get_ticks()
         msg_time = myfont.render("time : {}".format(int(tick/1000)),True,WHITE)
-        SCREEN.blit(msg_time,(10,10))
+        SCREEN.blit(msg_time,(10,30))
+        
+        #fps 표시(선택)
+        msg_fps = myfont.render("fps : {}".format(int((CLOCK.get_fps()))),True,WHITE)
+        SCREEN.blit(msg_fps,(10,50))
 
-        pg.display.flip()
+        
+
 
 
     
