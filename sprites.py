@@ -1,7 +1,6 @@
 import pygame as pg
+from pygame.locals import *
 from setting import *
-from abc import *
-import camera as c
 import random
 
 #스프라이트 그룹
@@ -38,12 +37,12 @@ class Player(pg.sprite.Sprite):
     def move(self):
         #키 입력에 따른 플레이어 이동
         keys = pg.key.get_pressed()
-        if keys[pg.K_d] and self.rect.right <= BG_WIDTH:#오른쪽
+        if keys[K_d] and self.rect.right <= BG_WIDTH:#오른쪽
             self.vector.x += self.vel
-        if keys[pg.K_a] and self.rect.left >= 0:#왼쪽
+        if keys[K_a] and self.rect.left >= 0:#왼쪽
             self.vector.x -= self.vel
         #점프 구현
-        if keys[pg.K_w]:
+        if keys[K_w]:
             if not self.jumping: #만약 jumping이 False라면
                 self.jumping = True
                 self.jump_pw = PLAYER_JUMP_PW
@@ -161,32 +160,35 @@ class Building(pg.sprite.Sprite):
         attackable_sprites.add(self)
         noncreature_sprites.add(self)
         all_sprites.add(self)
+        self.hp = None
+        self.image = None
+        self.image_red = None
+        self.image_green = None
+        self.rect = None
+        self.vector = None
     def update(self):
         if self.hp <= 0:
             self.kill()
 
 #장벽
 class Wall(Building):
-    def __init__(self):
+    def __init__(self,vector):
         super().__init__()
         self.hp = WALL_HP
         self.image = wall_img
         self.rect = self.image.get_rect()
-        self.vector = pg.math.Vector2(BG_WIDTH*2/3,768-140)
+        self.vector = vector
         self.rect.center = self.vector
-        
-    # def update(self):
-    #     pass
 
 #대포
 class Canon(Building):
-    def __init__(self):
+    def __init__(self,vector):
         super().__init__()
         self.hp = CANON_HP
         self.dmg = CANON_DMG
         self.image = canon_img
         self.rect = self.image.get_rect()
-        self.vector = pg.math.Vector2(BG_WIDTH/2,768-140)
+        self.vector = vector
         self.rect.center = self.vector
         self.attack_cooldown = CANON_COOLDOWN
         self.last = pg.time.get_ticks()
@@ -245,8 +247,9 @@ class CanonShot(pg.sprite.Sprite):
         self.move()
         self.attack()
 
+
 class Mine(Building):
-    def __init__(self,player):
+    def __init__(self,player,vector):
         super().__init__()
         self.hp = MINE_HP
         self.gold_output = MINE_GOLD_OUTPUT
@@ -255,7 +258,7 @@ class Mine(Building):
         self.player = player
         self.image = mine_img
         self.rect = self.image.get_rect()
-        self.vector = pg.math.Vector2(BG_WIDTH/3,768-140)
+        self.vector = vector
         self.rect.center = self.vector
     def mining(self):
         now = pg.time.get_ticks()
@@ -275,12 +278,10 @@ class Floor(pg.sprite.Sprite):
 
 
 
+
+
+
 #플레이어 생성
 human1 = Human()
 #적 생성
 zomebie1 = Zombie()
-#벽 생성
-wall1 = Wall()
-
-canon1 = Canon()
-mine1 = Mine(human1)

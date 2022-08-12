@@ -44,22 +44,23 @@ ZOMBIE_DMG = 100
 ZOMBIE_COOLDONW = 500#1초
 
 #WALL
+WALL_PRICE = 1000
 WALL_HP = 1000
 
 #CANON
+CANON_PRICE = 500
 CANON_HP = 500
 CANON_DMG = 10
 CANONSHOT_VEL = 50
 CANON_COOLDOWN = 1000
 
 #MINE
+MINE_PRICE = 500
 MINE_HP = 300
 MINE_GOLD_OUTPUT = 10
 MINE_GOLD_COOLDOWN = 1000
 
-
-
-
+#색깔 채우기
 def fill(surface, color):
     new_surface = surface.copy()
     w, h = surface.get_size()
@@ -69,7 +70,9 @@ def fill(surface, color):
             a = new_surface.get_at((x, y))[3]
             new_surface.set_at((x, y), pg.Color(r, g, b, a))
     return new_surface
-    
+
+#TODO:파이썬 변수 명 자동 지정 ->globals()
+
 
 #리소스 파일(폰트,이미지,사운드)
 myfont = pg.font.Font("resources\\font\\NeoDunggeunmoPro-Regular.ttf",30)
@@ -84,9 +87,10 @@ zombie_img = pg.image.load("resources\\images\\zombie.png").convert_alpha()
 
 #건물
 wall_img = pg.image.load("resources\\images\\wall.png").convert_alpha()
-wall_red = fill(wall_img,RED)
+
 canon_img = pg.image.load("resources\\images\\wall.png").convert_alpha()
 canonshot_img = pg.image.load("resources\\images\\wall.png").convert_alpha()
+
 mine_img = pg.image.load("resources\\images\\wall.png").convert_alpha()
 
 
