@@ -1,11 +1,11 @@
 import pygame as pg
 from setting import *
+import sprites as sp
 
 """카메라는 플레이어를 중심으로 움직이고 다른 스프라이트들을 그림."""
 
 class Camera():
-    def __init__(self,sprite_group,player):
-        self.sprite_group = sprite_group #그려야 할 스프라이트 그룹
+    def __init__(self,player):
         self.player = player #따라다녀야 할 플레이어
         self.offset = pg.math.Vector2(self.player.vector.x-WIDTH/2,0)
     #player 따라다니기
@@ -21,10 +21,15 @@ class Camera():
         #배경 화면 출력
         SCREEN.blit(background_img,(-self.offset.x,-self.offset.y))
 
-        #스프라이트 그룹 화면 출력
-        for sprite in self.sprite_group:
-            SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
 
+        for sprite in sp.noncreature_sprites:
+            SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
+        for sprite in sp.building_sprites:
+            SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
+        for sprite in sp.enemy_sprites:
+            SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
+        for sprite in sp.player_sprites:
+            SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
         #-----정보 표시-----#
         #플레이어 hp표시
         SCREEN.blit(hp_frame_img,(WIDTH - HP_FRAME_WIDTH - HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))#체력바 프레임
@@ -37,7 +42,7 @@ class Camera():
 
         #시간 표시(선택)
         tick = pg.time.get_ticks()
-        msg_time = myfont.render("time : {}".format(int(tick/1000)),True,WHITE)
+        msg_time = myfont.render("time : {}".format(tick//1000),True,WHITE)
         SCREEN.blit(msg_time,(10,30))
         
         #fps 표시(선택)

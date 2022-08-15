@@ -1,15 +1,15 @@
 import pygame as pg
 from pygame.locals import *
 from setting import *
-import random
 
 #스프라이트 그룹
 all_sprites = pg.sprite.Group()#모든 스프라이트 그룹
-noncreature_sprites = pg.sprite.Group()#비생물 스프라이트 그룹
-creature_sprites = pg.sprite.Group()#생물 스프라이트 그룹
 player_sprites = pg.sprite.Group()#플레이어 스프라이트 그룹
 enemy_sprites = pg.sprite.Group()#적 스프라이트 그룹
 building_sprites = pg.sprite.Group()#건물 스프라이트 그룹
+noncreature_sprites = pg.sprite.Group()#비생물 스프라이트 그룹
+
+creature_sprites = pg.sprite.Group()#생물 스프라이트 그룹
 attackable_sprites = pg.sprite.Group()#적이 공격가능한 스프라이트 그룹
 
 #플레이어 스프라이트
@@ -33,7 +33,8 @@ class Player(pg.sprite.Sprite):
         self.gold = 0
         self.gold_cooldown = None
         self.last = pg.time.get_ticks()
-        self.build_status = 0
+        self.level = 1
+             
     def move(self):
         #키 입력에 따른 플레이어 이동
         keys = pg.key.get_pressed()
@@ -56,10 +57,6 @@ class Player(pg.sprite.Sprite):
                 self.vector.y -= self.jump_vel
 
         self.rect.center = self.vector
-    
-
-
-    
 
 
     def update(self):
@@ -82,6 +79,7 @@ class Human(Player):
         self.rect = self.image.get_rect()
         self.rect.center = self.vector
         self.vel = HUMAN_VEL
+        self.gold = HUMAN_START_GOLD
         self.gold_cooldown = HUMAN_GOLD_COOLDOWN
 #마법사 클래스 정의
 class Wizard(Player):
@@ -93,6 +91,7 @@ class Wizard(Player):
         self.rect = self.image.get_rect()
         self.rect.center = self.vector
         self.vel = WIZARD_VEL
+        self.gold = WIZARD_START_GOLD
         self.gold_cooldown = WIZARD_GOLD_COOLDOWN
 
 #플레이어를 공격하는 모든 적
@@ -158,7 +157,6 @@ class Building(pg.sprite.Sprite):
         super().__init__()
         building_sprites.add(self)
         attackable_sprites.add(self)
-        noncreature_sprites.add(self)
         all_sprites.add(self)
         self.hp = None
         self.image = None
@@ -186,9 +184,12 @@ class Canon(Building):
         super().__init__()
         self.hp = CANON_HP
         self.dmg = CANON_DMG
-        self.image = canon_img
-        self.rect = self.image.get_rect()
         self.vector = vector
+        if self.vector.x >= BG_WIDTH/2:
+            self.image = canon_img
+        else:
+            self.image = canon_img_l
+        self.rect = self.image.get_rect()
         self.rect.center = self.vector
         self.attack_cooldown = CANON_COOLDOWN
         self.last = pg.time.get_ticks()
@@ -201,9 +202,12 @@ class Canon(Building):
             if now - self.last >= self.attack_cooldown:
                 self.last = now
                 if target.vector.x - self.vector.x >= 0:
+                    self.image = canon_img
                     CanonShot(self.dmg,1,self.vector)
                 elif target.vector.x - self.vector.x < 0:
+                    self.image = canon_img_l
                     CanonShot(self.dmg,-1,self.vector)
+            
         self.rect.center = self.vector
 
     def update(self):
@@ -282,6 +286,5 @@ class Floor(pg.sprite.Sprite):
 
 
 #플레이어 생성
-human1 = Human()
 #적 생성
 zomebie1 = Zombie()
