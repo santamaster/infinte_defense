@@ -1,3 +1,4 @@
+from distutils.spawn import spawn
 import pygame as pg
 from pygame.locals import *
 from setting import *
@@ -32,9 +33,8 @@ class Player(pg.sprite.Sprite):
         self.jump_pw = 0
         self.gold = 0
         self.gold_cooldown = None
-        self.last = pg.time.get_ticks()
-        self.level = 1
-             
+        self.gold_counter = 0
+
     def move(self):
         #키 입력에 따른 플레이어 이동
         keys = pg.key.get_pressed()
@@ -61,13 +61,12 @@ class Player(pg.sprite.Sprite):
 
     def update(self):
         self.move()
-        now = pg.time.get_ticks()
-        if now - self.last >= self.gold_cooldown:
-            self.last = now
+        self.gold_counter += 1
+        if self.gold_counter >= self.gold_cooldown:
+            self.gold_counter = 0
             self.gold += 1
-        #if self.hp <=0:
-        #    self.kill()
-    
+        if self.hp <= 0:
+            self.kill()
 
 #인간 클래스 정의
 class Human(Player):
@@ -109,14 +108,14 @@ class Enemy(pg.sprite.Sprite):
         self.vel = None
         self.stop = 0
         self.attack_cooldown = None
-        self.last = pg.time.get_ticks()
+        self.attack_counter = 0
 
     def attack(self):
+        self.attack_counter += 1
         collided_sprites = pg.sprite.spritecollide(self,attackable_sprites,False)
         for sprite in collided_sprites:
-            now = pg.time.get_ticks()
-            if now - self.last >= self.attack_cooldown:
-                self.last = now
+            if self.attack_counter >= self.attack_cooldown:
+                self.attack_counter = 0
                 sprite.hp -=10
 
     def move(self):
@@ -142,14 +141,17 @@ class Enemy(pg.sprite.Sprite):
 
 #좀비
 class Zombie(Enemy):
-    def __init__(self):
+    def __init__(self,spawn_location):
         super().__init__()
         self.hp = ZOMBIE_HP
         self.damage = 10
         self.vel = ZOMBIE_VEL
         self.image = zombie_img
         self.rect = self.image.get_rect()
-        self.rect.center = self.vector
+        if spawn_location == "right":
+            self.vector = pg.math.Vector2(BG_WIDTH-10,768 - 140)
+        elif spawn_location == "left":
+            self.vector = pg.math.Vector2(10,768-140)
         self.attack_cooldown = ZOMBIE_COOLDONW
 
 class Building(pg.sprite.Sprite):
@@ -192,21 +194,24 @@ class Canon(Building):
         self.rect = self.image.get_rect()
         self.rect.center = self.vector
         self.attack_cooldown = CANON_COOLDOWN
-        self.last = pg.time.get_ticks()
-
+        self.attack_counter = 0
+        self.attack_range = CANON_RANGE
     def attack(self):
-        #가장 가까운 적을 향해 포탄을 쏨
-        if enemy_sprites:
-            target = sorted(enemy_sprites.sprites(),key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
-            now = pg.time.get_ticks()
-            if now - self.last >= self.attack_cooldown:
-                self.last = now
+        self.attack_counter += 1
+        #사거리 안에 있는 적
+        enemy_in_range = [ sprite for sprite in enemy_sprites.sprites() \
+                if abs(sprite.vector.x - self.vector.x) <= self.attack_range]
+        if enemy_in_range:
+            #사거리 안에 있는 적들 중 가장 가까운 적
+            target = sorted(enemy_in_range,key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
+            if self.attack_counter >= self.attack_cooldown:
+                self.attack_counter = 0
                 if target.vector.x - self.vector.x >= 0:
                     self.image = canon_img
-                    CanonShot(self.dmg,1,self.vector)
+                    CanonShot(self.dmg,"right",self.vector)
                 elif target.vector.x - self.vector.x < 0:
                     self.image = canon_img_l
-                    CanonShot(self.dmg,-1,self.vector)
+                    CanonShot(self.dmg,"left",self.vector)
             
         self.rect.center = self.vector
 
@@ -236,12 +241,12 @@ class CanonShot(pg.sprite.Sprite):
                 self.kill()
         
     def move(self):
-        if self.direction == 1:
+        if self.direction == "right":
             self.vector.x += self.vel
             if self.vector.x > BG_WIDTH:
                 self.kill()
 
-        elif self.direction == -1:
+        elif self.direction == "left":
             self.vector.x -= self.vel
             if self.vector.x < 0:
                 self.kill()
@@ -258,17 +263,17 @@ class Mine(Building):
         self.hp = MINE_HP
         self.gold_output = MINE_GOLD_OUTPUT
         self.gold_cooldown = MINE_GOLD_COOLDOWN
-        self.last = pg.time.get_ticks()
+        self.mining_counter = 0
         self.player = player
         self.image = mine_img
         self.rect = self.image.get_rect()
         self.vector = vector
         self.rect.center = self.vector
     def mining(self):
-        now = pg.time.get_ticks()
-        if now - self.last >= self.gold_cooldown:
+        self.mining_counter +=1
+        if self.mining_counter >= self.gold_cooldown:
             self.player.gold += self.gold_output
-            self.last = now
+            self.mining_counter = 0
             
     def update(self):
         if self.hp <= 0:
@@ -286,5 +291,3 @@ class Floor(pg.sprite.Sprite):
 
 
 #플레이어 생성
-#적 생성
-zomebie1 = Zombie()
