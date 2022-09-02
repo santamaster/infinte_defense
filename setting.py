@@ -100,7 +100,7 @@ canonshot_img = pg.image.load("resources\\images\\canonshot.png").convert_alpha(
 #박격포
 mortar_img = pg.image.load("resources\\images\\canon.png").convert_alpha()
 mortar_img_l = pg.transform.flip(mortar_img,True,False)
-mortarshot_img = pg.image.load("resources\\images\\mortarshot.png").convert_alpha()
+mortarshot_img = pg.image.load("resources\\images\\canonshot.png").convert_alpha()
 
 
 mine_img = pg.image.load("resources\\images\\mine.png").convert_alpha()

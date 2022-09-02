@@ -21,12 +21,13 @@ class Player(pg.sprite.Sprite):
         attackable_sprites.add(self)
         creature_sprites.add(self)
         #플레이어 기본 변수 
-        self.hp_max = None
+        self.max_hp = None
         self.hp = None
         self.vector = pg.math.Vector2(BG_WIDTH/2,768-140)
         self.image = None
         self.rect = None
         self.vel = None
+        self.hp_bar = None
         self.jumping = False
         self.jump_vel = 0
         self.jump_pw = 0
@@ -56,7 +57,10 @@ class Player(pg.sprite.Sprite):
                 self.vector.y -= self.jump_vel
 
         self.rect.center = self.vector
-
+    # def show_hp(self):
+    #     self.hp_bar.width = self.rect.width * self.hp / self.max_hp
+    #     self.hp_bar.center = self.vector + (0,self.rect.height+10)
+    #     pg.draw.rect(SCREEN,RED,self.hp_bar)
     def update(self):
         self.move()
         self.gold_counter += 1
@@ -70,11 +74,12 @@ class Player(pg.sprite.Sprite):
 class Human(Player):
     def __init__(self):
         super().__init__()
-        self.hp_max = HUMAN_HP
+        self.max_hp = HUMAN_HP
         self.hp = HUMAN_HP
         self.image = human_img
         self.rect = self.image.get_rect()
         self.rect.center = self.vector
+        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
         self.vel = HUMAN_VEL
         self.gold = HUMAN_START_GOLD
         self.gold_cooldown = HUMAN_GOLD_COOLDOWN
@@ -82,11 +87,12 @@ class Human(Player):
 class Wizard(Player):
     def __init__(self):
         super().__init__()
-        self.hp_max = WIZARD_HP
+        self.max_hp = WIZARD_HP
         self.hp = WIZARD_HP
         self.image = wizard_img
         self.rect = self.image.get_rect()
         self.rect.center = self.vector
+        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
         self.vel = WIZARD_VEL
         self.gold = WIZARD_START_GOLD
         self.gold_cooldown = WIZARD_GOLD_COOLDOWN
@@ -98,6 +104,7 @@ class Enemy(pg.sprite.Sprite):
         enemy_sprites.add(self)
         creature_sprites.add(self)
         all_sprites.add(self)
+        self.max_hp = None
         self.hp = None
         self.damage = None
         self.img = None
@@ -107,7 +114,7 @@ class Enemy(pg.sprite.Sprite):
         self.stop = 0
         self.attack_cooldown = None
         self.attack_counter = 0
-
+        self.hp_bar = None
     def attack(self):
         self.attack_counter += 1
         collided_sprites = pg.sprite.spritecollide(self,attackable_sprites,False)
@@ -115,7 +122,8 @@ class Enemy(pg.sprite.Sprite):
             if self.attack_counter >= self.attack_cooldown:
                 self.attack_counter = 0
                 sprite.hp -=10
-    
+    def show_hp(self):
+        pass
     def move(self):
         if pg.sprite.spritecollide(self,attackable_sprites,False):
             self.stop = 1
@@ -134,6 +142,7 @@ class Enemy(pg.sprite.Sprite):
     def update(self):
         self.move()
         self.attack()
+        self.show_hp()
         if self.hp <= 0:
             self.kill()
 
@@ -141,6 +150,7 @@ class Enemy(pg.sprite.Sprite):
 class Zombie(Enemy):
     def __init__(self,spawn_location):
         super().__init__()
+        self.max_hp = ZOMBIE_HP
         self.hp = ZOMBIE_HP
         self.damage = 10
         self.vel = ZOMBIE_VEL
@@ -151,7 +161,14 @@ class Zombie(Enemy):
         elif spawn_location == "left":
             self.vector = pg.math.Vector2(10,768-140)
         self.attack_cooldown = ZOMBIE_COOLDONW
+        self.hp_bar = pg.Surface((self.rect.width,10))
+        self.hp_bar_alpha = 255
+        self.hp_bar.set_alpha(self.hp_bar_alpha)
+        self.hp_bar.fill(RED)
+        
 
+    def show_hp(self):
+        self.hp_bar = pg.Surface((self.rect.width*self.hp/self.max_hp,10))
 #건물
 class Building(pg.sprite.Sprite):
     def __init__(self):
@@ -159,12 +176,14 @@ class Building(pg.sprite.Sprite):
         building_sprites.add(self)
         attackable_sprites.add(self)
         all_sprites.add(self)
+        self.max_hp = None
         self.hp = None
         self.image = None
         self.image_red = None
         self.image_green = None
         self.rect = None
         self.vector = None
+        self.hp_var = None
     def update(self):
         if self.hp <= 0:
             self.kill()
@@ -173,16 +192,20 @@ class Building(pg.sprite.Sprite):
 class Wall(Building):
     def __init__(self,vector):
         super().__init__()
+        self.max_hp = WALL_HP
         self.hp = WALL_HP
         self.image = wall_img
         self.rect = self.image.get_rect()
         self.vector = vector
         self.rect.center = self.vector
+        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
+
 
 #대포
 class Canon(Building):
     def __init__(self,vector):
         super().__init__()
+        self.max_hp = CANON_HP
         self.hp = CANON_HP
         self.dmg = CANON_DMG
         self.vector = vector
@@ -192,9 +215,11 @@ class Canon(Building):
             self.image = canon_img_l
         self.rect = self.image.get_rect()
         self.rect.center = self.vector
+        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
         self.attack_cooldown = CANON_COOLDOWN
         self.attack_counter = 0
         self.attack_range = CANON_RANGE
+        
     def attack(self):
         self.attack_counter += 1
         #사거리 안에 있는 적
@@ -259,6 +284,7 @@ class CanonShot(pg.sprite.Sprite):
 class Mortar(Building):
     def __init__(self,vector):
         super().__init__()
+        self.max_hp = MORTAR_HP
         self.hp = MORTAR_HP
         self.damage = MORTAR_DMG
         self.vector = vector
@@ -268,6 +294,7 @@ class Mortar(Building):
             self.image = mortar_img_l
         self.rect = self.image.get_rect()
         self.rect.center = self.vector
+        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
         self.attack_cooldown = CANON_COOLDOWN
         self.attack_counter = 0
         self.attack_range = CANON_RANGE
@@ -276,15 +303,18 @@ class Mortar(Building):
 class Mine(Building):
     def __init__(self,player,vector):
         super().__init__()
+        self.max_hp = MINE_HP
         self.hp = MINE_HP
-        self.gold_output = MINE_GOLD_OUTPUT
-        self.gold_cooldown = MINE_GOLD_COOLDOWN
-        self.mining_counter = 0
         self.player = player
         self.image = mine_img
         self.rect = self.image.get_rect()
         self.vector = vector
         self.rect.center = self.vector
+        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
+        self.gold_output = MINE_GOLD_OUTPUT
+        self.gold_cooldown = MINE_GOLD_COOLDOWN
+        self.mining_counter = 0
+        
     def mining(self):
         self.mining_counter +=1
         if self.mining_counter >= self.gold_cooldown:
