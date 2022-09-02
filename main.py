@@ -4,55 +4,72 @@ from pygame.locals import *
 from setting import *
 import sprites as sp
 import camera as c
-import random
+from random import random,choice
 
-    
+#초기화
+def reset():
+    for sprite in sp.all_sprites:
+        sprite.kill()
+
+#적 생성 시스템
+def enemy_spawn(game_sec):
+    spawn_location = "left","right"
+
+    #시간이 지날수록 적이 더 빨리 나옴
+    if game_sec <= 30:      #30초 이내
+        if random()*FPS <= 0.1:  #1초당 0.1마리
+            sp.Zombie(choice(spawn_location))
+    elif game_sec <= 60:    #30~60초
+        if random()*FPS <= 0.2:  #1초당 0.2마리
+            sp.Zombie(choice(spawn_location))
+    elif game_sec <= 120:   #60~120초
+        if random()*FPS <= 0.5:  #1초당 0.5마리
+            sp.Zombie(choice(spawn_location))
+    else:                   #120초 이후
+        if random()*FPS <= 1:    #1초당 1마리
+            sp.Zombie(choice(spawn_location))
+
+build_button = pg.Rect(WIDTH/2,HEIGHT/2, 200, 50)
+build_button.center = (WIDTH-100,HEIGHT-25)
+
 #게임
 def game(character):
-    running = 1
-    click = 0
-    game_tick = 0
+
+    
     if character == "human":
         player = sp.Human()
     elif character == "wizard":
         player = sp.Wizard()
-    else: #기본값
+    else: #기본값(오류 방지)
         player = sp.Human()
+
+    running = 1
+    click = 0
+    game_tick = 0
     camera = c.Camera(player)
-    build_button = pg.Rect(WIDTH/2,HEIGHT/2, 200, 50)
-    build_button.center = (WIDTH-100,HEIGHT-25)
-    spawn_location_list = "left","right"
+
     while running:
         game_tick += 1
         game_sec = game_tick//FPS
+        click = 0
+
         #fps 설정
         CLOCK.tick(FPS)
-        click = 0
-        #종료
+        
+        #이벤트 처리
         for event in pg.event.get():
             if event.type == QUIT:
                 pg.quit()
                 exit()
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
-                    running = 0
-                    player.kill()
+                    menu(camera)
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
                     click = 1
-        #시간이 지날수록 적이 더 빨리 나옴
-        if game_sec <= 30: #30초 이내
-            if random.random()*FPS <= 0.1: #1초당 0.1마리
-                sp.Zombie(random.choice(spawn_location_list))
-        elif game_sec <= 60:
-            if random.random()*FPS <= 0.2:
-                sp.Zombie(random.choice(spawn_location_list))
-        elif game_sec <= 120:
-            if random.random()*FPS <= 0.5:
-                sp.Zombie(random.choice(spawn_location_list))
-        else:
-            if random.random()*FPS <= 1:
-                sp.Zombie(random.choice(spawn_location_list))
+
+        #적 생성
+        enemy_spawn(game_sec)
 
         #카메라 움직이기
         camera.player_follow()
@@ -67,13 +84,15 @@ def game(character):
         mx, my = pg.mouse.get_pos()
         pg.draw.rect(SCREEN, (255, 0, 0), build_button)
 
-        #버튼 클릭시 게임 실행
+        #버튼 클릭시 실행
         if build_button.collidepoint((mx, my)):
             if click:
                 build(camera,player)
-        #플레이어 죽을 시 게임 종료
-        if player.hp <= 0:
+
+        #플레이어 죽어서 없을 시 게임 종료
+        if not sp.player_sprites:
             defeat()
+
         #플레이어 hp표시
         SCREEN.blit(hp_frame_img,(WIDTH - HP_FRAME_WIDTH - HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))#체력바 프레임
         pg.draw.rect(SCREEN,RED,[WIDTH - HP_FRAME_INTERVAL - HP_FRAME_WIDTH*49/50,HP_FRAME_INTERVAL + HP_FRAME_HEIGHT/10, \
@@ -88,8 +107,7 @@ def game(character):
         SCREEN.blit(msg_time,(10,50))
         pg.display.flip()
 
-
-
+#건물 설치시 x축 충돌 확인
 def collision_check(rect,camera):
     for sprite in sp.building_sprites.sprites() + sp.enemy_sprites.sprites():
         if rect.left <= sprite.rect.right - camera.offset.x and \
@@ -97,30 +115,31 @@ def collision_check(rect,camera):
             return True
             
     return False
-
+    
+exit_button = pg.Rect(WIDTH - 50,20,30,30)
+cancel_button = pg.Rect(WIDTH - 70,100,50,50)
+wall_button = pg.Rect(100,HEIGHT - 250,100,200)
+wall_rect = wall_img.get_rect()
+wall_green = fill(wall_img,GREEN)
+wall_red = fill(wall_img,RED)
+canon_button = pg.Rect(300,HEIGHT - 250,100,200)
+canon_rect = canon_img.get_rect()
+canon_green = fill(canon_img,GREEN)
+canon_red = fill(canon_img,RED)
+mine_button = pg.Rect(500,HEIGHT - 250,100,200)
+mine_rect = mine_img.get_rect()
+mine_green = fill(mine_img,GREEN)
+mine_red = fill(mine_img,RED)
 def build(camera,player):
     running = 1
     click = 0
     selected = ""
-    exit_button = pg.Rect(WIDTH - 50,20,30,30)
-    wall_button = pg.Rect(100,HEIGHT - 250,100,200)
-    wall_rect = wall_img.get_rect()
-    wall_green = fill(wall_img,GREEN)
-    wall_red = fill(wall_img,RED)
-    canon_button = pg.Rect(300,HEIGHT - 250,100,200)
-    canon_rect = canon_img.get_rect()
-    canon_green = fill(canon_img,GREEN)
-    canon_red = fill(canon_img,RED)
-    mine_button = pg.Rect(500,HEIGHT - 250,100,200)
-    mine_rect = mine_img.get_rect()
-    mine_green = fill(mine_img,GREEN)
-    mine_red = fill(mine_img,RED)
     while running:
 
         #fps 설정
         CLOCK.tick(FPS)
         
-        #종료
+        #이벤트 처리
         for event in pg.event.get():
             if event.type == QUIT:
                 pg.quit()
@@ -132,13 +151,12 @@ def build(camera,player):
                 click = 1
             elif event.type == MOUSEBUTTONUP:
                 click = 0
-        #카메라로 화면만 그리기(스프라이트 업데이트 안함)
-        camera.draw()
+
+        #어두위진 화면 그리기(스프라이트 업데이트 안함)
+        camera.darkened_draw()
         #마우스 위치 가져오기
         mx, my = pg.mouse.get_pos()
 
-        if exit_button.collidepoint((mx,my)):
-            running = 0
         if selected == "wall":
             if not wall_button.collidepoint((mx, my)):
                 wall_rect.center = (mx,my)
@@ -184,19 +202,74 @@ def build(camera,player):
                             pass
 
         if click:
-            if wall_button.collidepoint((mx, my)):
+            if exit_button.collidepoint((mx,my)):
+                if not selected:
+                    running = 0
+            elif cancel_button.collidepoint((mx,my)):
+                selected = ""
+
+            elif wall_button.collidepoint((mx, my)):
                 selected = "wall"
             elif canon_button.collidepoint((mx,my)):
                 selected = "canon"
             elif mine_button.collidepoint((mx,my)):
                 selected = "mine"
+            
         else:
             selected = ""
         
         pg.draw.rect(SCREEN, (255,0,0),exit_button)
+        pg.draw.rect(SCREEN,(255,0,0),cancel_button)
         pg.draw.rect(SCREEN, (255, 0, 0), wall_button)
         pg.draw.rect(SCREEN, (0, 255, 0), canon_button)
         pg.draw.rect(SCREEN, (0, 0, 255), mine_button)
+
+        #현재 골드 표시
+        msg_gold = myfont.render("gold : {}".format(player.gold),True,WHITE)
+        SCREEN.blit(msg_gold,(10,10))
+
+        pg.display.flip()
+
+menu_frame = pg.Rect(0,0,300,500)
+menu_frame.center = (WIDTH/2,HEIGHT/2)
+goto_main_menu = pg.Rect(0,0,100,50)
+goto_main_menu.center = (WIDTH/2,HEIGHT/2+150)
+go_back = pg.Rect(0,0,100,50)
+go_back.center = (WIDTH/2,HEIGHT/2 +50)
+def menu(camera):
+    running = 1
+    click = 0
+    while running:
+
+        #fps 설정
+        CLOCK.tick(FPS)
+        
+        #이벤트 처리
+        for event in pg.event.get():
+            if event.type == QUIT:
+                pg.quit()
+                exit()
+            elif event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    running = 0
+            elif event.type == MOUSEBUTTONDOWN:
+                click = 1
+            elif event.type == MOUSEBUTTONUP:
+                click = 0
+        #어두워진 화면 그리기(스프라이트 업데이트 안함)
+        camera.darkened_draw()
+
+        #마우스 위치 가져오기
+        mx, my = pg.mouse.get_pos()
+        if click:
+            if goto_main_menu.collidepoint((mx,my)):
+                reset()
+                main_menu()
+            elif go_back.collidepoint((mx,my)):
+                running = 0
+        pg.draw.rect(SCREEN, (255,255,0),menu_frame)
+        pg.draw.rect(SCREEN, (255,0,0),goto_main_menu)
+        pg.draw.rect(SCREEN,(255,0,0),go_back)
 
         pg.display.flip()
 
@@ -229,14 +302,13 @@ def defeat():
         pg.display.flip()
 
 
+play_button = pg.Rect(0,0,200,100)
+play_button.center = (WIDTH/2,HEIGHT/2)
 
-#TODO:
 def main_menu():
     click = 0
     character_list = ["human","wizard"]
     select = 0
-    play_button = pg.Rect(0,0,200,100)
-    play_button.center = (WIDTH/2,HEIGHT/2)
     while 1:
         SCREEN.fill(BLACK)
         for event in pg.event.get():
@@ -259,6 +331,7 @@ def main_menu():
                 click = 1
             elif event.type == MOUSEBUTTONUP:
                 click = 0
+
         mx, my = pg.mouse.get_pos()
 
         if click:

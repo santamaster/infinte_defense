@@ -54,6 +54,11 @@ CANON_DMG = 30
 CANONSHOT_VEL = 50
 CANON_COOLDOWN = 1*FPS
 CANON_RANGE = 500
+
+#MORTAR
+MORTAR_PRICE = 500
+MORTAR_HP = 500
+MORTAR_DMG = 100
 #MINE
 MINE_PRICE = 150
 MINE_HP = 300
@@ -87,9 +92,16 @@ zombie_img = pg.image.load("resources\\images\\zombie.png").convert_alpha()
 #건물
 wall_img = pg.image.load("resources\\images\\wall.png").convert_alpha()
 
+#대포
 canon_img = pg.image.load("resources\\images\\canon.png").convert_alpha()
 canon_img_l = pg.transform.flip(canon_img,True,False)
 canonshot_img = pg.image.load("resources\\images\\canonshot.png").convert_alpha()
+
+#박격포
+mortar_img = pg.image.load("resources\\images\\canon.png").convert_alpha()
+mortar_img_l = pg.transform.flip(mortar_img,True,False)
+mortarshot_img = pg.image.load("resources\\images\\mortarshot.png").convert_alpha()
+
 
 mine_img = pg.image.load("resources\\images\\mine.png").convert_alpha()
 

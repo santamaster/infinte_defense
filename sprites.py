@@ -1,19 +1,18 @@
-from distutils.spawn import spawn
 import pygame as pg
 from pygame.locals import *
 from setting import *
 
 #스프라이트 그룹
-all_sprites = pg.sprite.Group()#모든 스프라이트 그룹
-player_sprites = pg.sprite.Group()#플레이어 스프라이트 그룹
-enemy_sprites = pg.sprite.Group()#적 스프라이트 그룹
-building_sprites = pg.sprite.Group()#건물 스프라이트 그룹
-noncreature_sprites = pg.sprite.Group()#비생물 스프라이트 그룹
+all_sprites = pg.sprite.Group()         #모든 스프라이트 그룹
+player_sprites = pg.sprite.Group()      #플레이어 스프라이트 그룹
+enemy_sprites = pg.sprite.Group()       #적 스프라이트 그룹
+building_sprites = pg.sprite.Group()    #건물 스프라이트 그룹
+noncreature_sprites = pg.sprite.Group() #비생물 스프라이트 그룹
 
-creature_sprites = pg.sprite.Group()#생물 스프라이트 그룹
-attackable_sprites = pg.sprite.Group()#적이 공격가능한 스프라이트 그룹
+creature_sprites = pg.sprite.Group()    #생물 스프라이트 그룹
+attackable_sprites = pg.sprite.Group()  #적이 공격가능한 스프라이트 그룹
 
-#플레이어 스프라이트
+#플레이어
 class Player(pg.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -58,7 +57,6 @@ class Player(pg.sprite.Sprite):
 
         self.rect.center = self.vector
 
-
     def update(self):
         self.move()
         self.gold_counter += 1
@@ -68,7 +66,7 @@ class Player(pg.sprite.Sprite):
         if self.hp <= 0:
             self.kill()
 
-#인간 클래스 정의
+#인간
 class Human(Player):
     def __init__(self):
         super().__init__()
@@ -80,7 +78,7 @@ class Human(Player):
         self.vel = HUMAN_VEL
         self.gold = HUMAN_START_GOLD
         self.gold_cooldown = HUMAN_GOLD_COOLDOWN
-#마법사 클래스 정의
+#마법사
 class Wizard(Player):
     def __init__(self):
         super().__init__()
@@ -93,7 +91,7 @@ class Wizard(Player):
         self.gold = WIZARD_START_GOLD
         self.gold_cooldown = WIZARD_GOLD_COOLDOWN
 
-#플레이어를 공격하는 모든 적
+#적
 class Enemy(pg.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -117,14 +115,14 @@ class Enemy(pg.sprite.Sprite):
             if self.attack_counter >= self.attack_cooldown:
                 self.attack_counter = 0
                 sprite.hp -=10
-
+    
     def move(self):
         if pg.sprite.spritecollide(self,attackable_sprites,False):
             self.stop = 1
         else:
             self.stop = 0
         if not self.stop:
-            #적과 가장 가까이 있는 플레이어를 타겟으로 한다.
+            #적과 가장 가까이 있는 플레이어를 타겟
             if player_sprites:
                 target = sorted(player_sprites.sprites(),key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
                 if target.vector.x - self.vector.x > 0:
@@ -154,6 +152,7 @@ class Zombie(Enemy):
             self.vector = pg.math.Vector2(10,768-140)
         self.attack_cooldown = ZOMBIE_COOLDONW
 
+#건물
 class Building(pg.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -201,6 +200,7 @@ class Canon(Building):
         #사거리 안에 있는 적
         enemy_in_range = [ sprite for sprite in enemy_sprites.sprites() \
                 if abs(sprite.vector.x - self.vector.x) <= self.attack_range]
+
         if enemy_in_range:
             #사거리 안에 있는 적들 중 가장 가까운 적
             target = sorted(enemy_in_range,key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
@@ -256,7 +256,23 @@ class CanonShot(pg.sprite.Sprite):
         self.move()
         self.attack()
 
-
+class Mortar(Building):
+    def __init__(self,vector):
+        super().__init__()
+        self.hp = MORTAR_HP
+        self.damage = MORTAR_DMG
+        self.vector = vector
+        if self.vector.x >= BG_WIDTH/2:
+            self.image = mortar_img
+        else:
+            self.image = mortar_img_l
+        self.rect = self.image.get_rect()
+        self.rect.center = self.vector
+        self.attack_cooldown = CANON_COOLDOWN
+        self.attack_counter = 0
+        self.attack_range = CANON_RANGE
+    def attack(self):
+        pass
 class Mine(Building):
     def __init__(self,player,vector):
         super().__init__()
@@ -280,10 +296,12 @@ class Mine(Building):
             self.kill()
         self.mining()
         
-#바닥
-class Floor(pg.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
+
+
+# #바닥
+# class Floor(pg.sprite.Sprite):
+#     def __init__(self):
+#         super().__init__()
 
 
 
