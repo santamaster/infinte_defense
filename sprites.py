@@ -1,3 +1,4 @@
+from tkinter import E
 import pygame as pg
 from pygame.locals import *
 from setting import *
@@ -35,6 +36,7 @@ class Player(pg.sprite.Sprite):
         self.gold_cooldown = None
         self.gold_counter = 0
 
+
     def move(self):
         #키 입력에 따른 플레이어 이동
         keys = pg.key.get_pressed()
@@ -57,10 +59,7 @@ class Player(pg.sprite.Sprite):
                 self.vector.y -= self.jump_vel
 
         self.rect.center = self.vector
-    # def show_hp(self):
-    #     self.hp_bar.width = self.rect.width * self.hp / self.max_hp
-    #     self.hp_bar.center = self.vector + (0,self.rect.height+10)
-    #     pg.draw.rect(SCREEN,RED,self.hp_bar)
+
     def update(self):
         self.move()
         self.gold_counter += 1
@@ -79,7 +78,7 @@ class Human(Player):
         self.image = human_img
         self.rect = self.image.get_rect()
         self.rect.center = self.vector
-        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
+        self.hp_bar = pg.Rect(0,0,10,self.rect.width)
         self.vel = HUMAN_VEL
         self.gold = HUMAN_START_GOLD
         self.gold_cooldown = HUMAN_GOLD_COOLDOWN
@@ -92,7 +91,7 @@ class Wizard(Player):
         self.image = wizard_img
         self.rect = self.image.get_rect()
         self.rect.center = self.vector
-        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
+        self.hp_bar = pg.Rect(0,0,10,self.rect.width)
         self.vel = WIZARD_VEL
         self.gold = WIZARD_START_GOLD
         self.gold_cooldown = WIZARD_GOLD_COOLDOWN
@@ -108,67 +107,88 @@ class Enemy(pg.sprite.Sprite):
         self.hp = None
         self.damage = None
         self.img = None
-        self.vector = pg.math.Vector2(10,768 - 140)
+        self.vector = pg.math.Vector2(0,768-140)
         self.rect = None
+        self.range_rect = None
         self.vel = None
         self.stop = 0
-        self.attack_cooldown = None
+        self.attack_dmg = 0
+        self.attack_cooldown = 0
         self.attack_counter = 0
+        self.first_attack_cooldown = 0
+        self.first_attack_counter = 0
+        self.first_attack = 0
         self.hp_bar = None
+        self.status = None
+
     def attack(self):
-        self.attack_counter += 1
-        collided_sprites = pg.sprite.spritecollide(self,attackable_sprites,False)
-        for sprite in collided_sprites:
-            if self.attack_counter >= self.attack_cooldown:
-                self.attack_counter = 0
-                sprite.hp -=10
-    def show_hp(self):
-        pass
-    def move(self):
-        if pg.sprite.spritecollide(self,attackable_sprites,False):
-            self.stop = 1
+        attackable_list = attackable_sprites.sprites()
+        index = self.range_rect.collidelist(attackable_list)
+        if not index == -1:
+            self.status = "attack"
+            target = attackable_list[index]
+            if not self.first_attack:
+                self.first_attack_counter += 1
+                if self.first_attack_counter >= self.first_attack_cooldown:
+                    self.first_attack = 1
+                    target.hp -= self.attack_dmg
+            else:
+                self.attack_counter += 1
+                if self.attack_counter >= self.attack_cooldown:
+                    self.attack_counter = 0
+                    target.hp -= self.attack_dmg
+
         else:
-            self.stop = 0
-        if not self.stop:
-            #적과 가장 가까이 있는 플레이어를 타겟
-            if player_sprites:
-                target = sorted(player_sprites.sprites(),key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
-                if target.vector.x - self.vector.x > 0:
-                    self.vector.x += self.vel
-                elif target.vector.x - self.vector.x < 0:
-                    self.vector.x -= self.vel
+            self.attack_counter = 0
+            self.first_attack_counter = 0
+            self.status = "move"
+
+    def move(self):
+
+        #적과 가장 가까이 있는 플레이어를 타겟
+        if player_sprites:
+            target = sorted(player_sprites.sprites(),key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
+            if self.status == "attack":
+                
+                return
+            if target.vector.x - self.vector.x > 0:
+                self.vector.x += self.vel
+                self.status = "move"
+            elif target.vector.x - self.vector.x < 0:
+                self.vector.x -= self.vel
+                self.status = "move"
+
         self.rect.center = self.vector
+        self.range_rect.center = self.vector
 
     def update(self):
-        self.move()
         self.attack()
-        self.show_hp()
+        self.move()
         if self.hp <= 0:
             self.kill()
-
+        self.hp_bar.size = (self.rect.width*self.hp/self.max_hp,10)
+        self.hp_bar.midleft = self.vector.x-self.rect.width/2, self.vector.y
+        
 #좀비
 class Zombie(Enemy):
     def __init__(self,spawn_location):
         super().__init__()
         self.max_hp = ZOMBIE_HP
         self.hp = ZOMBIE_HP
-        self.damage = 10
+        self.attack_dmg = ZOMBIE_DMG
+        self.attack_cooldown = ZOMBIE_COOLDONW
+        self.first_attack_cooldown = ZOMBIE_FIRST_COOLDOWN
         self.vel = ZOMBIE_VEL
         self.image = zombie_img
         self.rect = self.image.get_rect()
+        self.range_rect = self.rect.inflate(2*ZOMBIE_RANGE,0)
         if spawn_location == "right":
-            self.vector = pg.math.Vector2(BG_WIDTH-10,768 - 140)
+            self.vector = pg.math.Vector2(BG_WIDTH,768 - 140)
         elif spawn_location == "left":
-            self.vector = pg.math.Vector2(10,768-140)
-        self.attack_cooldown = ZOMBIE_COOLDONW
-        self.hp_bar = pg.Surface((self.rect.width,10))
-        self.hp_bar_alpha = 255
-        self.hp_bar.set_alpha(self.hp_bar_alpha)
-        self.hp_bar.fill(RED)
-        
+            self.vector = pg.math.Vector2(0,768-140)
+        self.hp_bar = pg.Rect(0,0,self.rect.width,10)
+        self.hp_bar.midleft = self.vector.x-self.rect.width/2, self.vector.y
 
-    def show_hp(self):
-        self.hp_bar = pg.Surface((self.rect.width*self.hp/self.max_hp,10))
 #건물
 class Building(pg.sprite.Sprite):
     def __init__(self):
@@ -187,6 +207,10 @@ class Building(pg.sprite.Sprite):
     def update(self):
         if self.hp <= 0:
             self.kill()
+        self.hp_bar.size = (self.rect.width*self.hp/self.max_hp,10)
+        self.hp_bar.midleft = self.vector.x-self.rect.width/2, self.vector.y
+
+
 
 #장벽
 class Wall(Building):
@@ -198,7 +222,7 @@ class Wall(Building):
         self.rect = self.image.get_rect()
         self.vector = vector
         self.rect.center = self.vector
-        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
+        self.hp_bar = pg.Rect(0,0,10,self.rect.width)
 
 
 #대포
@@ -215,35 +239,57 @@ class Canon(Building):
             self.image = canon_img_l
         self.rect = self.image.get_rect()
         self.rect.center = self.vector
-        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
+        self.hp_bar = pg.Rect(0,0,10,self.rect.width)
         self.attack_cooldown = CANON_COOLDOWN
         self.attack_counter = 0
+        self.first_attack_cooldown = CANON_FIRST_COOLDOWN
+        self.first_attack_counter = 0
+        self.first_attack = 0
         self.attack_range = CANON_RANGE
         
     def attack(self):
-        self.attack_counter += 1
         #사거리 안에 있는 적
         enemy_in_range = [ sprite for sprite in enemy_sprites.sprites() \
                 if abs(sprite.vector.x - self.vector.x) <= self.attack_range]
 
         if enemy_in_range:
+
             #사거리 안에 있는 적들 중 가장 가까운 적
             target = sorted(enemy_in_range,key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
-            if self.attack_counter >= self.attack_cooldown:
-                self.attack_counter = 0
-                if target.vector.x - self.vector.x >= 0:
-                    self.image = canon_img
-                    CanonShot(self.dmg,"right",self.vector)
-                elif target.vector.x - self.vector.x < 0:
-                    self.image = canon_img_l
-                    CanonShot(self.dmg,"left",self.vector)
-            
+            if not self.first_attack:
+                self.first_attack_counter +=1
+                if self.first_attack_counter >=self.first_attack_cooldown:
+                    self.first_attack = 1
+                    if target.vector.x - self.vector.x >= 0:
+                        self.image = canon_img
+                        CanonShot(self.dmg,"right",self.vector)
+                    elif target.vector.x - self.vector.x < 0:
+                        self.image = canon_img_l
+                        CanonShot(self.dmg,"left",self.vector)
+            else:
+                self.attack_counter += 1
+                if self.attack_counter >= self.attack_cooldown:
+                    self.attack_counter = 0
+                    if target.vector.x - self.vector.x >= 0:
+                        self.image = canon_img
+                        CanonShot(self.dmg,"right",self.vector)
+                    elif target.vector.x - self.vector.x < 0:
+                        self.image = canon_img_l
+                        CanonShot(self.dmg,"left",self.vector)
+        else:
+            self.first_attack_counter = 0
+            self.attack_counter = 0
+            self.first_attack = 0
+
         self.rect.center = self.vector
 
     def update(self):
         self.attack()
         if self.hp <= 0:
             self.kill()
+        self.hp_bar.size = (self.rect.width*self.hp/self.max_hp,10)
+        self.hp_bar.midleft = self.vector.x-self.rect.width/2, self.vector.y
+
 
 #포탄
 class CanonShot(pg.sprite.Sprite):
@@ -253,7 +299,7 @@ class CanonShot(pg.sprite.Sprite):
         all_sprites.add(self)
         self.vel = CANONSHOT_VEL
         self.dmg = damage
-        self.direction = direction#1 = 오른쪽 -1 = 왼쪽
+        self.direction = direction
         self.image = canonshot_img
         self.rect = self.image.get_rect()
         self.vector = pg.math.Vector2(location.x,location.y)
@@ -294,12 +340,17 @@ class Mortar(Building):
             self.image = mortar_img_l
         self.rect = self.image.get_rect()
         self.rect.center = self.vector
-        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
+        self.hp_bar = pg.Rect(0,0,10,self.rect.width)
         self.attack_cooldown = CANON_COOLDOWN
         self.attack_counter = 0
         self.attack_range = CANON_RANGE
     def attack(self):
         pass
+    def update(self):
+        self.hp_bar.size = (self.rect.width*self.hp/self.max_hp,10)
+        self.hp_bar.midleft = self.vector.x-self.rect.width/2, self.vector.y
+        pass
+
 class Mine(Building):
     def __init__(self,player,vector):
         super().__init__()
@@ -310,7 +361,7 @@ class Mine(Building):
         self.rect = self.image.get_rect()
         self.vector = vector
         self.rect.center = self.vector
-        self.hp_bar = pg.Rect = (0,0,10,self.rect.width)
+        self.hp_bar = pg.Rect(0,0,10,self.rect.width)
         self.gold_output = MINE_GOLD_OUTPUT
         self.gold_cooldown = MINE_GOLD_COOLDOWN
         self.mining_counter = 0
@@ -325,6 +376,8 @@ class Mine(Building):
         if self.hp <= 0:
             self.kill()
         self.mining()
+        self.hp_bar.size = (self.rect.width*self.hp/self.max_hp,10)
+        self.hp_bar.midleft = self.vector.x-self.rect.width/2, self.vector.y
         
 
 

@@ -126,6 +126,8 @@ def game(character):
 
             pg.draw.rect(SCREEN, (255, 0, 0), goto_mainmenu_defeat)
 
+            msg_defeat = myfont.render("YOU DIE",True,WHITE)
+            SCREEN.blit(msg_defeat,(WIDTH/2,HEIGHT/3))
             pg.display.flip()
             continue
 
@@ -135,12 +137,12 @@ def game(character):
         #카메라 움직이기
         camera.player_follow()
 
-        #스프라이트 업데이트
-        sp.all_sprites.update()
-
         #카메라로 화면 그리기
         camera.draw()
 
+        #스프라이트 업데이트
+        sp.all_sprites.update()
+        
         pg.draw.rect(SCREEN, (255, 0, 0), build_button)
 
         #버튼 클릭시 실행
