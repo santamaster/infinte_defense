@@ -227,7 +227,7 @@ def build(camera,player):
                     SCREEN.blit(wall_green,wall_rect.topleft)
                     if not click:
                         if player.gold >= WALL_PRICE:
-                            sp.Wall(pg.math.Vector2(mx+camera.offset.x,768-140))
+                            sp.Wall(pg.math.Vector2(mx+camera.offset.x,516))
                             player.gold -= WALL_PRICE
                         else:
                             pass
@@ -241,7 +241,7 @@ def build(camera,player):
                     SCREEN.blit(canon_green,canon_rect.topleft)
                     if not click:
                         if player.gold >= CANON_PRICE:
-                            sp.Canon(pg.math.Vector2(mx+camera.offset.x,768-140))
+                            sp.Canon(pg.math.Vector2(mx+camera.offset.x,516))
                             player.gold -= CANON_PRICE
                         else:
                             pass
@@ -256,7 +256,7 @@ def build(camera,player):
                     SCREEN.blit(mine_green,mine_rect.topleft)
                     if not click:
                         if player.gold >= MINE_PRICE:
-                            sp.Mine(player,pg.math.Vector2(mx+camera.offset.x,768-140))
+                            sp.Mine(player,pg.math.Vector2(mx+camera.offset.x,516))
                             player.gold -= MINE_PRICE
                         else:
                             pass

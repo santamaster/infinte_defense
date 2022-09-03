@@ -31,6 +31,9 @@ class Camera():
             SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
         for sprite in sp.player_sprites:
             SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
+        
+        SCREEN.blit(ground_img,(-self.offset.x,-self.offset.y))
+        #체력
         if show_hp:
             for sprite in sp.building_sprites:
                 pg.draw.rect(SCREEN,RED,sprite.hp_bar.move(-self.offset.x,-self.offset.y\
@@ -60,6 +63,7 @@ class Camera():
         for sprite in sp.player_sprites:
             SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
         
+        SCREEN.blit(ground_img,(-self.offset.x,-self.offset.y))
         #화면 어둡게 만들기
         self.veil.set_alpha(self.alpha)
         SCREEN.blit(self.veil,(0, 0))

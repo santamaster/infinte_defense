@@ -12,7 +12,7 @@ BLACK = (0,0,0)
 
 #시스템 설정
 WIDTH, HEIGHT = 1366,768 
-BG_WIDTH,BG_HEIGHT=2732,768
+BG_WIDTH,BG_HEIGHT=4000,768
 SCREEN = pg.display.set_mode((WIDTH,HEIGHT))
 CLOCK = pg.time.Clock()
 FPS = 60
@@ -56,7 +56,7 @@ WALL_HP = 1000
 CANON_PRICE = 300
 CANON_HP = 500
 CANON_DMG = 30
-CANONSHOT_VEL = 50
+CANONSHOT_VEL = 30
 CANON_COOLDOWN = 1*FPS
 CANON_FIRST_COOLDOWN = 0.5*FPS
 CANON_RANGE = 800
@@ -65,11 +65,13 @@ CANON_RANGE = 800
 MORTAR_PRICE = 500
 MORTAR_HP = 500
 MORTAR_DMG = 100
+
 #MINE
 MINE_PRICE = 150
 MINE_HP = 300
 MINE_GOLD_OUTPUT = 10
 MINE_GOLD_COOLDOWN = 1*FPS
+
 
 #색깔 채우기
 def fill(surface, color):
@@ -87,6 +89,7 @@ def fill(surface, color):
 #리소스 파일(폰트,이미지,사운드)
 myfont = pg.font.Font("resources\\font\\NeoDunggeunmoPro-Regular.ttf",30)
 background_img = pg.transform.scale(pg.image.load("resources\\images\\background.png").convert_alpha(),(BG_WIDTH,BG_HEIGHT))
+ground_img = pg.transform.scale(pg.image.load("resources\\images\\ground.png").convert_alpha(),(BG_WIDTH,BG_HEIGHT))
 hp_frame_img = pg.transform.scale(pg.image.load("resources\\images\\hp_bar_frame.png").convert_alpha(),(HP_FRAME_WIDTH,HP_FRAME_HEIGHT))
 
 #플레이어

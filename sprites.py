@@ -24,7 +24,7 @@ class Player(pg.sprite.Sprite):
         #플레이어 기본 변수 
         self.max_hp = None
         self.hp = None
-        self.vector = pg.math.Vector2(BG_WIDTH/2,768-140)
+        self.vector = pg.math.Vector2(BG_WIDTH/2,516)
         self.image = None
         self.rect = None
         self.vel = None
@@ -58,7 +58,7 @@ class Player(pg.sprite.Sprite):
                 self.jumping = False
                 self.vector.y -= self.jump_vel
 
-        self.rect.center = self.vector
+        self.rect.midbottom = self.vector
 
     def update(self):
         self.move()
@@ -77,7 +77,7 @@ class Human(Player):
         self.hp = HUMAN_HP
         self.image = human_img
         self.rect = self.image.get_rect()
-        self.rect.center = self.vector
+        self.rect.midbottom = self.vector
         self.hp_bar = pg.Rect(0,0,10,self.rect.width)
         self.vel = HUMAN_VEL
         self.gold = HUMAN_START_GOLD
@@ -90,7 +90,7 @@ class Wizard(Player):
         self.hp = WIZARD_HP
         self.image = wizard_img
         self.rect = self.image.get_rect()
-        self.rect.center = self.vector
+        self.rect.midbottom = self.vector
         self.hp_bar = pg.Rect(0,0,10,self.rect.width)
         self.vel = WIZARD_VEL
         self.gold = WIZARD_START_GOLD
@@ -107,7 +107,7 @@ class Enemy(pg.sprite.Sprite):
         self.hp = None
         self.damage = None
         self.img = None
-        self.vector = pg.math.Vector2(0,768-140)
+        self.vector = pg.math.Vector2(0,516)
         self.rect = None
         self.range_rect = None
         self.vel = None
@@ -158,7 +158,7 @@ class Enemy(pg.sprite.Sprite):
                 self.vector.x -= self.vel
                 self.status = "move"
 
-        self.rect.center = self.vector
+        self.rect.midbottom = self.vector
         self.range_rect.center = self.vector
 
     def update(self):
@@ -183,9 +183,9 @@ class Zombie(Enemy):
         self.rect = self.image.get_rect()
         self.range_rect = self.rect.inflate(2*ZOMBIE_RANGE,0)
         if spawn_location == "right":
-            self.vector = pg.math.Vector2(BG_WIDTH,768 - 140)
+            self.vector = pg.math.Vector2(BG_WIDTH,516)
         elif spawn_location == "left":
-            self.vector = pg.math.Vector2(0,768-140)
+            self.vector = pg.math.Vector2(0,516)
         self.hp_bar = pg.Rect(0,0,self.rect.width,10)
         self.hp_bar.midleft = self.vector.x-self.rect.width/2, self.vector.y
 
@@ -221,7 +221,7 @@ class Wall(Building):
         self.image = wall_img
         self.rect = self.image.get_rect()
         self.vector = vector
-        self.rect.center = self.vector
+        self.rect.midbottom = self.vector
         self.hp_bar = pg.Rect(0,0,10,self.rect.width)
 
 
@@ -238,7 +238,7 @@ class Canon(Building):
         else:
             self.image = canon_img_l
         self.rect = self.image.get_rect()
-        self.rect.center = self.vector
+        self.rect.midbottom = self.vector
         self.hp_bar = pg.Rect(0,0,10,self.rect.width)
         self.attack_cooldown = CANON_COOLDOWN
         self.attack_counter = 0
@@ -281,7 +281,7 @@ class Canon(Building):
             self.attack_counter = 0
             self.first_attack = 0
 
-        self.rect.center = self.vector
+        self.rect.midbottom = self.vector
 
     def update(self):
         self.attack()
@@ -303,7 +303,7 @@ class CanonShot(pg.sprite.Sprite):
         self.image = canonshot_img
         self.rect = self.image.get_rect()
         self.vector = pg.math.Vector2(location.x,location.y)
-        self.rect.center = self.vector
+        self.rect.midbottom = self.vector
 
     def attack(self):
         collided_sprite = pg.sprite.spritecollide(self,enemy_sprites,False)
@@ -321,7 +321,7 @@ class CanonShot(pg.sprite.Sprite):
             self.vector.x -= self.vel
             if self.vector.x < 0:
                 self.kill()
-        self.rect.center = self.vector
+        self.rect.midbottom = self.vector
 
     def update(self):
         self.move()
@@ -339,7 +339,7 @@ class Mortar(Building):
         else:
             self.image = mortar_img_l
         self.rect = self.image.get_rect()
-        self.rect.center = self.vector
+        self.rect.midbottom = self.vector
         self.hp_bar = pg.Rect(0,0,10,self.rect.width)
         self.attack_cooldown = CANON_COOLDOWN
         self.attack_counter = 0
@@ -360,7 +360,7 @@ class Mine(Building):
         self.image = mine_img
         self.rect = self.image.get_rect()
         self.vector = vector
-        self.rect.center = self.vector
+        self.rect.midbottom = self.vector
         self.hp_bar = pg.Rect(0,0,10,self.rect.width)
         self.gold_output = MINE_GOLD_OUTPUT
         self.gold_cooldown = MINE_GOLD_COOLDOWN
