@@ -1,4 +1,3 @@
-from tkinter import E
 import pygame as pg
 from pygame.locals import *
 from setting import *
@@ -16,6 +15,9 @@ attackable_sprites = pg.sprite.Group()  #적이 공격가능한 스프라이트 
 wall_sprites = pg.sprite.Group()
 mine_sprites = pg.sprite.Group()
 canon_sprites = pg.sprite.Group()
+
+#게임 플레이에 영향을 미치지 않는 이펙트 스프라이트 그룹
+effect_sprites = pg.sprite.Group()
 
 #플레이어
 class Player(pg.sprite.Sprite):
@@ -155,7 +157,6 @@ class Enemy(pg.sprite.Sprite):
         if player_sprites:
             target = sorted(player_sprites.sprites(),key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
             if self.status == "attack":
-                
                 return
             if target.vector.x - self.vector.x > 0:
                 self.vector.x += self.vel
@@ -431,6 +432,7 @@ class Mine(Building):
         if self.mining_counter >= self.gold_cooldown:
             self.player.gold += self.gold_output
             self.mining_counter = 0
+            Earn_gold_effect(self)
             
     def upgrade(self):
         if self.level < self.max_level:
@@ -451,16 +453,29 @@ class Mine(Building):
         self.hp_bar.size = (self.rect.width*self.hp/self.max_hp,10)
         self.hp_bar.midleft = self.vector.x-self.rect.width/2, self.vector.y
         
+#이펙트
+class Effect(pg.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        all_sprites.add(self)
+        effect_sprites.add(self)
 
 
-# #바닥
-# class Floor(pg.sprite.Sprite):
-#     def __init__(self):
-#         super().__init__()
+#골드 획득 이펙트
+class Earn_gold_effect(Effect):
+    def __init__(self,sprite):
+        super().__init__()
+        self.vector = pg.math.Vector2(sprite.rect.midtop)
+        self.image = earn_gold_effect_image
+        self.rect = self.image.get_rect()
+        self.shown_rect = self.rect.copy()
+        self.vel = EARN_GOLD_EFFECT_VEL
+        self.hold_time = EARN_GOLD_EFFECT_HOLD_TIME
+        self.counter = 0
 
-
-
-
-
-
-#플레이어 생성
+    def update(self):
+        self.counter += 1
+        if self.counter >= self.hold_time:
+            self.kill()
+        self.vector.y += self.vel
+        self.rect.center = self.vector
