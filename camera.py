@@ -21,26 +21,28 @@ class Camera():
         #배경과 모든 스프라이트를 반대방향으로 이동시킨뒤 화면 출력
         #배경 화면 출력
         SCREEN.blit(background_img,(-self.offset.x,-self.offset.y))
-
+        for sprite in sp.all_sprites:
+            sprite.shown_rect = sprite.rect.move(-self.offset.x,-self.offset.y)
 
         for sprite in sp.noncreature_sprites:
-            SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
+            SCREEN.blit(sprite.image,sprite.shown_rect)
         for sprite in sp.building_sprites:
-            SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
+            SCREEN.blit(sprite.image,sprite.shown_rect)
         for sprite in sp.enemy_sprites:
-            SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
+            SCREEN.blit(sprite.image,sprite.shown_rect)
         for sprite in sp.player_sprites:
-            SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
+            SCREEN.blit(sprite.image,sprite.shown_rect)
         
         SCREEN.blit(ground_img,(-self.offset.x,-self.offset.y))
+        
         #체력
         if show_hp:
             for sprite in sp.building_sprites:
                 pg.draw.rect(SCREEN,RED,sprite.hp_bar.move(-self.offset.x,-self.offset.y\
-                    + sprite.rect.height/2 + 20))
+                    - sprite.rect.height - 20))
             for sprite in sp.enemy_sprites:
                 pg.draw.rect(SCREEN,RED,sprite.hp_bar.move(-self.offset.x,-self.offset.y\
-                    + sprite.rect.height/2 + 20))
+                    - sprite.rect.height - 20))
         #fps 표시(선택)
         msg_fps = myfont.render("fps : {}".format(int((CLOCK.get_fps()))),True,WHITE)
         SCREEN.blit(msg_fps,(10,100))

@@ -29,6 +29,8 @@ def enemy_spawn(game_sec):
         if random()*FPS <= 1:    #1초당 1마리
             sp.Zombie(choice(spawn_location))
 
+
+
 build_button = pg.Rect(WIDTH/2,HEIGHT/2, 200, 50)
 build_button.center = (WIDTH-100,HEIGHT-25)
 
@@ -42,6 +44,11 @@ goto_mainmenu_defeat = pg.Rect(0,0,200,100)
 goto_mainmenu_defeat.center = (WIDTH/2,HEIGHT/2)
 restart = pg.Rect(0,0,100,50)
 restart.center = (WIDTH/2,HEIGHT/2 - 50)
+
+upgrade_button = pg.Rect(0,0,50,50)
+sell_button = pg.Rect(0,0,50,50)
+
+    
 #게임
 def game(character):
     
@@ -57,7 +64,8 @@ def game(character):
     game_tick = 0
     menu = 0
     camera = c.Camera(player)
-
+    upgrade_sell = 0
+    selected_sprite = None
     while running:
         game_tick += 1
         game_sec = game_tick//FPS
@@ -106,6 +114,8 @@ def game(character):
                     game_tick = 0
                     menu = 0
                     camera = c.Camera(player)
+                    upgrade_sell = 0
+                    selected_sprite = None
                     continue
 
             pg.draw.rect(SCREEN,YELLOW,menu_frame)
@@ -149,6 +159,49 @@ def game(character):
         if build_button.collidepoint((mx, my)):
             if click:
                 build(camera,player)
+        
+
+        for building in sp.building_sprites:
+            if building.shown_rect.collidepoint((mx,my)):
+                SCREEN.blit(building.outline_image,building.shown_rect)
+                if click:
+                    upgrade_sell = 1
+                    selected_sprite = building
+        
+        if upgrade_sell:
+            upgrade_button.midbottom = selected_sprite.shown_rect.topright
+            pg.draw.rect(SCREEN,RED,upgrade_button.move(0,-10))
+            sell_button.midbottom = selected_sprite.shown_rect.topleft
+            pg.draw.rect(SCREEN,RED,sell_button.move(0,-10))
+            if upgrade_button.collidepoint((mx,my)):
+                if click:
+                    if selected_sprite.level == selected_sprite.max_level:
+                        print("already max level!")
+                        upgrade_sell = 0
+                        selected_sprite = None
+                    elif player.gold >= selected_sprite.upgrade_price:
+                        player.gold -= selected_sprite.upgrade_price
+                        selected_sprite.upgrade()
+                        upgrade_sell = 0
+                        selected_sprite = None
+                    elif player.gold <= selected_sprite.upgrade_price:
+                        print("you don't have enough gold!")
+                        upgrade_sell = 0
+                        selected_sprite = None
+                else:
+                    pass
+            elif sell_button.collidepoint((mx,my)):
+                if click:
+                    player.gold += int(selected_sprite.price * REFUND_RATE)
+                    selected_sprite.kill()
+                    upgrade_sell = 0
+                    selected_sprite = None
+            elif selected_sprite.shown_rect.collidepoint((mx,my)):
+                pass
+            elif click:
+                upgrade_sell = 0
+                selected_sprite = None
+
         #플레이어 hp표시
         SCREEN.blit(hp_frame_img,(WIDTH - HP_FRAME_WIDTH - HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))#체력바 프레임
         pg.draw.rect(SCREEN,RED,[WIDTH - HP_FRAME_INTERVAL - HP_FRAME_WIDTH*49/50,HP_FRAME_INTERVAL + HP_FRAME_HEIGHT/10, \
@@ -158,10 +211,9 @@ def game(character):
         msg_gold = myfont.render("gold : {}".format(player.gold),True,WHITE)
         SCREEN.blit(msg_gold,(10,10))
 
-        #시간 표시(선택)
+        #시간 표시
         msg_time = myfont.render("{}분 {}초".format(game_sec//60,game_sec%60),True,WHITE)
         SCREEN.blit(msg_time,(10,50))
-
 
         pg.display.flip()
 
@@ -226,9 +278,9 @@ def build(camera,player):
                 else:
                     SCREEN.blit(wall_green,wall_rect.topleft)
                     if not click:
-                        if player.gold >= WALL_PRICE:
+                        if player.gold >= WALL_PRICE[0]:
                             sp.Wall(pg.math.Vector2(mx+camera.offset.x,516))
-                            player.gold -= WALL_PRICE
+                            player.gold -= WALL_PRICE[0]
                         else:
                             pass
         elif selected == "canon":
@@ -240,9 +292,9 @@ def build(camera,player):
                 else:
                     SCREEN.blit(canon_green,canon_rect.topleft)
                     if not click:
-                        if player.gold >= CANON_PRICE:
+                        if player.gold >= CANON_PRICE[0]:
                             sp.Canon(pg.math.Vector2(mx+camera.offset.x,516))
-                            player.gold -= CANON_PRICE
+                            player.gold -= CANON_PRICE[0]
                         else:
                             pass
 
@@ -255,9 +307,9 @@ def build(camera,player):
                 else:
                     SCREEN.blit(mine_green,mine_rect.topleft)
                     if not click:
-                        if player.gold >= MINE_PRICE:
+                        if player.gold >= MINE_PRICE[0]:
                             sp.Mine(player,pg.math.Vector2(mx+camera.offset.x,516))
-                            player.gold -= MINE_PRICE
+                            player.gold -= MINE_PRICE[0]
                         else:
                             pass
 
