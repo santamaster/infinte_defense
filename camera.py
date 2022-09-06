@@ -1,3 +1,4 @@
+from email import message
 import pygame as pg
 from setting import *
 import sprites as sp
@@ -17,7 +18,7 @@ class Camera():
         elif self.offset.x >= BG_WIDTH-WIDTH:
             self.offset.x = BG_WIDTH-WIDTH
 
-    def draw(self,show_hp=1,show_effect=1):
+    def draw(self,show_hp=1,show_effect=1,show_message = 1):
         #배경과 모든 스프라이트를 반대방향으로 이동시킨뒤 화면 출력
         #배경 화면 출력
         SCREEN.blit(background_img,(-self.offset.x,-self.offset.y))
@@ -47,7 +48,11 @@ class Camera():
         if show_effect:
             for sprite in sp.effect_sprites:
                 SCREEN.blit(sprite.image,sprite.shown_rect)
-
+        if show_message:
+            sp.message_sprites.update()
+            for message in sp.message_sprites:
+                SCREEN.blit(message.text,message.rect)
+            
 
         #fps 표시(선택)
         msg_fps = myfont.render("fps : {}".format(int((CLOCK.get_fps()))),True,WHITE)

@@ -1,3 +1,4 @@
+from tkinter import Button
 import pygame as pg
 from sys import exit
 from pygame.locals import *
@@ -34,15 +35,20 @@ def enemy_spawn(game_sec):
 build_button = pg.Rect(WIDTH/2,HEIGHT/2, 200, 50)
 build_button.center = (WIDTH-100,HEIGHT-25)
 
-menu_frame = pg.Rect(0,0,300,500)
+menu_frame_image = MENU_FRAME
+menu_frame = menu_frame_image.get_rect()
 menu_frame.center = (WIDTH/2,HEIGHT/2)
-goto_main_menu = pg.Rect(0,0,100,50)
+button_image = BUTTON
+goto_main_menu = button_image.get_rect()
 goto_main_menu.center = (WIDTH/2,HEIGHT/2 + 150)
-go_back = pg.Rect(0,0,100,50)
+
+go_back = button_image.get_rect()
 go_back.center = (WIDTH/2,HEIGHT/2 + 50)
-goto_mainmenu_defeat = pg.Rect(0,0,200,100)
+
+goto_mainmenu_defeat = button_image.get_rect()
 goto_mainmenu_defeat.center = (WIDTH/2,HEIGHT/2)
-restart = pg.Rect(0,0,100,50)
+
+restart = button_image.get_rect()
 restart.center = (WIDTH/2,HEIGHT/2 - 50)
 
 upgrade_button = pg.Rect(0,0,50,50)
@@ -118,10 +124,10 @@ def game(character):
                     selected_sprite = None
                     continue
 
-            pg.draw.rect(SCREEN,YELLOW,menu_frame)
-            pg.draw.rect(SCREEN,RED,goto_main_menu)
-            pg.draw.rect(SCREEN,RED,go_back)
-            pg.draw.rect(SCREEN,RED,restart)
+            SCREEN.blit(menu_frame_image,menu_frame)
+            SCREEN.blit(button_image,goto_main_menu)
+            SCREEN.blit(button_image,go_back)
+            SCREEN.blit(button_image,restart)
             
             pg.display.flip()
             continue
@@ -134,7 +140,7 @@ def game(character):
                     reset()
                     break
 
-            pg.draw.rect(SCREEN, (255, 0, 0), goto_mainmenu_defeat)
+            SCREEN.blit(button_image,goto_mainmenu_defeat)
 
             msg_defeat = myfont.render("YOU DIE",True,WHITE)
             SCREEN.blit(msg_defeat,(WIDTH/2,HEIGHT/3))
@@ -176,7 +182,7 @@ def game(character):
             if upgrade_button.collidepoint((mx,my)):
                 if click:
                     if selected_sprite.level == selected_sprite.max_level:
-                        print("already max level!")
+                        sp.Message("Already max level",RED)
                         upgrade_sell = 0
                         selected_sprite = None
                     elif player.gold >= selected_sprite.upgrade_price:
@@ -185,7 +191,7 @@ def game(character):
                         upgrade_sell = 0
                         selected_sprite = None
                     elif player.gold <= selected_sprite.upgrade_price:
-                        print("you don't have enough gold!")
+                        sp.Message("You don't have enough money",RED)
                         upgrade_sell = 0
                         selected_sprite = None
                 else:
@@ -230,17 +236,17 @@ def collision_check(rect,camera):
 exit_button = pg.Rect(WIDTH - 50,20,30,30)
 cancel_button = pg.Rect(WIDTH - 70,100,50,50)
 wall_button = pg.Rect(100,HEIGHT - 250,100,200)
-wall_rect = wall_img.get_rect()
-wall_green = fill(wall_img,GREEN)
-wall_red = fill(wall_img,RED)
+wall_rect = WALL_IMAGE.get_rect()
+wall_green = fill(WALL_IMAGE,GREEN)
+wall_red = fill(WALL_IMAGE,RED)
 canon_button = pg.Rect(300,HEIGHT - 250,100,200)
-canon_rect = canon_img.get_rect()
-canon_green = fill(canon_img,GREEN)
-canon_red = fill(canon_img,RED)
+canon_rect = CANON_IMAGE.get_rect()
+canon_green = fill(CANON_IMAGE,GREEN)
+canon_red = fill(CANON_IMAGE,RED)
 mine_button = pg.Rect(500,HEIGHT - 250,100,200)
-mine_rect = mine_img.get_rect()
-mine_green = fill(mine_img,GREEN)
-mine_red = fill(mine_img,RED)
+mine_rect = MINE_IMAGE.get_rect()
+mine_green = fill(MINE_IMAGE,GREEN)
+mine_red = fill(MINE_IMAGE,RED)
 
 def build(camera,player):
     running = 1

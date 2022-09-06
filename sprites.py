@@ -18,6 +18,7 @@ canon_sprites = pg.sprite.Group()
 
 #게임 플레이에 영향을 미치지 않는 이펙트 스프라이트 그룹
 effect_sprites = pg.sprite.Group()
+message_sprites = pg.sprite.Group()
 
 #플레이어
 class Player(pg.sprite.Sprite):
@@ -186,13 +187,17 @@ class Zombie(Enemy):
         self.attack_cooldown = ZOMBIE_COOLDONW
         self.first_attack_cooldown = ZOMBIE_FIRST_COOLDOWN
         self.vel = ZOMBIE_VEL
-        self.image = zombie_img
+        self.image = ZOMBIE_IMAGE
         self.rect = self.image.get_rect()
         self.range_rect = self.rect.inflate(2*ZOMBIE_RANGE,0)
         if spawn_location == "right":
             self.vector = pg.math.Vector2(BG_WIDTH,516)
+            self.rect.midbottom = self.vector
+            self.range_rect.center = self.vector
         elif spawn_location == "left":
             self.vector = pg.math.Vector2(0,516)
+            self.rect.midbottom = self.vector
+            self.range_rect.center = self.vector
         self.hp_bar = pg.Rect(0,0,self.rect.width,10)
         self.hp_bar.midleft = self.vector.x-self.rect.width/2, self.vector.y
 
@@ -235,8 +240,8 @@ class Wall(Building):
         self.upgrade_price = WALL_PRICE[self.level]
         self.max_hp = WALL_HP[self.level-1]
         self.hp = WALL_HP[self.level-1]
-        self.image = wall_img
-        self.outline_image = outline_wall
+        self.image = WALL_IMAGE
+        self.outline_image = OUTLINE_WALL
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
         self.vector = vector
@@ -265,11 +270,11 @@ class Canon(Building):
         self.attack_dmg = CANON_DMG[self.level-1]
         self.vector = vector
         if self.vector.x >= BG_WIDTH/2:
-            self.image = canon_img
-            self.outline_image = outline_canon
+            self.image = CANON_IMAGE
+            self.outline_image = OUTLINE_CANON
         else:
-            self.image = canon_img_l
-            self.outline_image = outline_canon_l
+            self.image = CANON_IMAGE_L
+            self.outline_image = OUTLINE_CANON_L
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
         self.rect.midbottom = self.vector
@@ -296,24 +301,24 @@ class Canon(Building):
                 if self.first_attack_counter >=self.first_attack_cooldown:
                     self.first_attack = 1
                     if target.vector.x - self.vector.x >= 0:
-                        self.image = canon_img
-                        self.outline_image = outline_canon
+                        self.image = CANON_IMAGE
+                        self.outline_image = OUTLINE_CANON
                         CanonShot(self.attack_dmg,"right",self.vector)
                     elif target.vector.x - self.vector.x < 0:
-                        self.image = canon_img_l
-                        self.outline_image = outline_canon_l
+                        self.image = CANON_IMAGE_L
+                        self.outline_image = OUTLINE_CANON_L
                         CanonShot(self.attack_dmg,"left",self.vector)
             else:
                 self.attack_counter += 1
                 if self.attack_counter >= self.attack_cooldown:
                     self.attack_counter = 0
                     if target.vector.x - self.vector.x >= 0:
-                        self.image = canon_img
-                        self.outline_image = outline_canon
+                        self.image = CANON_IMAGE
+                        self.outline_image = OUTLINE_CANON
                         CanonShot(self.attack_dmg,"right",self.vector)
                     elif target.vector.x - self.vector.x < 0:
-                        self.image = canon_img_l
-                        self.outline_image = outline_canon_l
+                        self.image = CANON_IMAGE_L
+                        self.outline_image = OUTLINE_CANON_L
                         CanonShot(self.attack_dmg,"left",self.vector)
         else:
             self.first_attack_counter = 0
@@ -349,10 +354,10 @@ class CanonShot(pg.sprite.Sprite):
         self.vel = CANONSHOT_VEL
         self.attack_dmg = damage
         self.direction = direction
-        self.image = canonshot_img
+        self.image = CANONSHOT_IMAGE
         self.rect = self.image.get_rect()
         self.shown_rect = None
-        self.vector = pg.math.Vector2(location.x,location.y)
+        self.vector = pg.math.Vector2(location.x,location.y-50)
         self.rect.midbottom = self.vector
 
     def attack(self):
@@ -385,11 +390,11 @@ class Mortar(Building):
         self.damage = MORTAR_DMG
         self.vector = vector
         if self.vector.x >= BG_WIDTH/2:
-            self.image = mortar_img
-            self.outline_image = outline_mortar
+            self.image = MORTAR_IMAGE
+            self.outline_image = OUTLINE_MORTAR
         else:
-            self.image = mortar_img_l
-            self.outline_image = outline_mortar_l
+            self.image = MORTAR_IMAGE_L
+            self.outline_image = OUTLINE_MORTAR_L
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
 
@@ -414,7 +419,7 @@ class Mine(Building):
         self.max_hp = MINE_HP[self.level-1]
         self.hp = MINE_HP[self.level-1]
         self.player = player
-        self.image = mine_img
+        self.image = MINE_IMAGE
         self.outline_image = outline_mine
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
@@ -466,12 +471,17 @@ class Earn_gold_effect(Effect):
     def __init__(self,sprite):
         super().__init__()
         self.vector = pg.math.Vector2(sprite.rect.midtop)
-        self.image = earn_gold_effect_image
+        self.images = EARN_GOLD_EFFECT_IMAGES
+        self.image_counter = 0
+        self.image_count = len(self.images)
+        self.image_speed = EARN_GOLD_EFFECT_SPEED
+        self.image = self.images[0]
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
         self.vel = EARN_GOLD_EFFECT_VEL
         self.hold_time = EARN_GOLD_EFFECT_HOLD_TIME
         self.counter = 0
+        self.rect.center = self.vector
 
     def update(self):
         self.counter += 1
@@ -479,3 +489,25 @@ class Earn_gold_effect(Effect):
             self.kill()
         self.vector.y += self.vel
         self.rect.center = self.vector
+        if self.image_counter >= self.image_count-1:
+            self.image_counter = 0
+        else:
+            self.image_counter += self.image_speed
+        self.image = self.images[int(self.image_counter)]
+
+class Message(pg.sprite.Sprite):
+    def __init__(self,message,color):
+        super().__init__()
+        self.add(message_sprites)
+        self.message = message
+        self.color = color
+        self.vector = pg.math.Vector2(WIDTH/2,100)
+        self.text = myfont.render(self.message,True,self.color)
+        self.rect = self.text.get_rect()
+        self.rect.center = self.vector
+        self.cooldown = MESSAGE_COOLDOWN
+        self.counter = 0
+    def update(self):
+        self.counter += 1
+        if self.counter >= self.cooldown:
+            self.kill()

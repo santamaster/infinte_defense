@@ -27,7 +27,16 @@ HP_FRAME_INTERVAL = 20
 PLAYER_JUMP_PW = 30
 GRAVITY = 3#중력
 REFUND_RATE = 0.7
+MESSAGE_COOLDOWN = 1*FPS
 
+#크기 정하기
+def set_size(size,*images):
+    changed_images = []
+    for image in images:
+        changed_images.append(pg.transform.scale(image,size))
+    return changed_images
+
+    
 #색깔 채우기
 def fill(surface, color):
     new_surface = surface.copy()
@@ -55,23 +64,26 @@ myfont = pg.font.Font("resources\\font\\NeoDunggeunmoPro-Regular.ttf",30)
 background_img = pg.transform.scale(pg.image.load("resources\\images\\background.png").convert_alpha(),(BG_WIDTH,BG_HEIGHT))
 ground_img = pg.transform.scale(pg.image.load("resources\\images\\ground.png").convert_alpha(),(BG_WIDTH,BG_HEIGHT))
 hp_frame_img = pg.transform.scale(pg.image.load("resources\\images\\hp_bar_frame.png").convert_alpha(),(HP_FRAME_WIDTH,HP_FRAME_HEIGHT))
+MENU_FRAME = pg.image.load("resources\\images\\menu_frame.png").convert_alpha()
+BUTTON = pg.image.load("resources\\images\\button.png").convert_alpha()
 
-#HUMAN
+#human
 human_img = pg.image.load("resources\\images\\human.png").convert_alpha()
 HUMAN_VEL = 10
 HUMAN_HP = 1000
-HUMAN_GOLD_COOLDOWN = 0.1*FPS #0.1초
+HUMAN_GOLD_COOLDOWN = 0.5*FPS #0.1초
 HUMAN_START_GOLD = 1000
 
 #WIZARD
 wizard_img = pg.image.load("resources\\images\\human.png").convert_alpha()
 WIZARD_VEL = 15
 WIZARD_HP = 1000
-WIZARD_GOLD_COOLDOWN = 0.1*FPS #0.1초
+WIZARD_GOLD_COOLDOWN = 0.5*FPS #0.1초
 WIZARD_START_GOLD = 1000
 
 #ZOMBIE
-zombie_img = pg.image.load("resources\\images\\zombie.png").convert_alpha()
+ZOMBIE_IMAGE_SIZE = (100,150)
+ZOMBIE_IMAGE = pg.image.load("resources\\images\\zombie.png").convert_alpha()
 ZOMBIE_VEL = 5
 ZOMBIE_HP = 90
 ZOMBIE_DMG = 50
@@ -81,18 +93,20 @@ ZOMBIE_RANGE = 10
 
 
 #WALL
-wall_img = pg.image.load("resources\\images\\wall.png").convert_alpha()
-outline_wall = get_outline(wall_img)
+WALL_IMAGE_SIZE = (100,150)
+WALL_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\wall.png").convert_alpha(),WALL_IMAGE_SIZE)
+OUTLINE_WALL = get_outline(WALL_IMAGE)
 WALL_PRICE = [250,300]
 WALL_HP = [1000,1500]
 WALL_MAX_LEVEL = 2
 
 #CANON
-canon_img = pg.image.load("resources\\images\\canon.png").convert_alpha()
-canon_img_l = pg.transform.flip(canon_img,True,False)
-outline_canon = get_outline(canon_img)
-outline_canon_l = get_outline(canon_img_l)
-canonshot_img = pg.image.load("resources\\images\\canonshot.png").convert_alpha()
+CANON_IMAGE_SIZE = (150,100)
+CANON_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\canon.png").convert_alpha(),CANON_IMAGE_SIZE)
+CANON_IMAGE_L = pg.transform.flip(CANON_IMAGE,True,False)
+OUTLINE_CANON = get_outline(CANON_IMAGE)
+OUTLINE_CANON_L = get_outline(CANON_IMAGE_L)
+CANONSHOT_IMAGE = pg.image.load("resources\\images\\canonshot.png").convert_alpha()
 CANON_PRICE = [300,400,500]
 CANON_HP = [500,700,1000]
 CANON_DMG = [30,50,70]
@@ -103,18 +117,19 @@ CANON_RANGE = 800
 CANON_MAX_LEVEL = 3
 
 #MORTAR
-mortar_img = pg.image.load("resources\\images\\canon.png").convert_alpha()
-mortar_img_l = pg.transform.flip(mortar_img,True,False)
-outline_mortar = get_outline(mortar_img)
-outline_mortar_l = get_outline(mortar_img_l)
-mortarshot_img = pg.image.load("resources\\images\\canonshot.png").convert_alpha()
+MORTAR_IMAGE = pg.image.load("resources\\images\\canon.png").convert_alpha()
+MORTAR_IMAGE_L = pg.transform.flip(MORTAR_IMAGE,True,False)
+OUTLINE_MORTAR = get_outline(MORTAR_IMAGE)
+OUTLINE_MORTAR_L = get_outline(MORTAR_IMAGE_L)
+MORTARSHOT_IMAGE = pg.image.load("resources\\images\\canonshot.png").convert_alpha()
 MORTAR_PRICE = 500
 MORTAR_HP = 500
 MORTAR_DMG = 100
 
 #MINE
-mine_img = pg.image.load("resources\\images\\mine.png").convert_alpha()
-outline_mine = get_outline(mine_img)
+MINE_IMAGE_SIZE = (150,100)
+MINE_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mine.png").convert_alpha(),MINE_IMAGE_SIZE)
+outline_mine = get_outline(MINE_IMAGE)
 MINE_PRICE = [150,250,400]
 MINE_HP = [300,400,600]
 MINE_GOLD_OUTPUT = [20,40,80]
@@ -122,6 +137,9 @@ MINE_GOLD_COOLDOWN = 2*FPS
 MINE_MAX_LEVEL = 3
 
 #earn_gold_effect
-earn_gold_effect_image = pg.transform.scale(pg.image.load("resources\\images\\gold.png").convert_alpha(),(45,45))
-EARN_GOLD_EFFECT_VEL = -7
-EARN_GOLD_EFFECT_HOLD_TIME = 0.25*FPS
+EARN_GOLD_EFFECT_SIZE = (30,30)
+EARN_GOLD_EFFECT_SPEED = 12/FPS
+EARN_GOLD_EFFECT_IMAGES = set_size(EARN_GOLD_EFFECT_SIZE,\
+    *[pg.image.load("resources\\images\\gold{}.png".format(i)).convert_alpha() for i in range(1,5)])
+EARN_GOLD_EFFECT_VEL = -6
+EARN_GOLD_EFFECT_HOLD_TIME = 0.35*FPS
