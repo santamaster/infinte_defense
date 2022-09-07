@@ -48,16 +48,17 @@ def fill(surface, color):
             new_surface.set_at((x, y), pg.Color(r, g, b, a))
     return new_surface
 
-#외각선따기
-def get_outline(image,color=(0,0,0)):
-    rect = image.get_rect()
+#외각선 따기
+def get_outline(image,outline_thickness=0.02,color=(255,255,255,255)):
     mask = pg.mask.from_surface(image)
-    outline = mask.outline()
-    outline_image = pg.Surface(rect.size).convert_alpha()
-    outline_image.fill((0,0,0,0))
-    for point in outline:
-        outline_image.set_at(point,color)
-    return outline_image
+    mask_size = mask.get_size()
+    scaled_mask = mask.scale((mask_size[0]*(1-outline_thickness*2),mask_size[1]*(1-outline_thickness*2)))
+
+    mask.erase(scaled_mask,(mask_size[0]*outline_thickness,mask_size[1]*outline_thickness))
+
+    return mask.to_surface(setcolor=color,unsetcolor=(0,0,0,0))
+
+
 
 #폰트,배경 및 기타
 myfont = pg.font.Font("resources\\font\\NeoDunggeunmoPro-Regular.ttf",30)
@@ -90,7 +91,7 @@ ZOMBIE_DMG = 50
 ZOMBIE_COOLDONW = 1*FPS#1초
 ZOMBIE_FIRST_COOLDOWN = 0.1*FPS#0.1초
 ZOMBIE_RANGE = 10
-
+ZOMBIE_HP_BAR_WIDTH = 100
 
 #WALL
 WALL_IMAGE_SIZE = (100,150)
@@ -99,6 +100,7 @@ OUTLINE_WALL = get_outline(WALL_IMAGE)
 WALL_PRICE = [250,300]
 WALL_HP = [1000,1500]
 WALL_MAX_LEVEL = 2
+WALL_HP_BAR_WIDTH = 100
 
 #CANON
 CANON_IMAGE_SIZE = (150,100)
@@ -115,6 +117,7 @@ CANON_COOLDOWN = 1*FPS
 CANON_FIRST_COOLDOWN = 0.5*FPS
 CANON_RANGE = 800
 CANON_MAX_LEVEL = 3
+CANON_HP_BAR_WIDTH = 150
 
 #MORTAR
 MORTAR_IMAGE = pg.image.load("resources\\images\\canon.png").convert_alpha()
@@ -135,6 +138,7 @@ MINE_HP = [300,400,600]
 MINE_GOLD_OUTPUT = [20,40,80]
 MINE_GOLD_COOLDOWN = 2*FPS
 MINE_MAX_LEVEL = 3
+MINE_HP_BAR_WIDTH = 150
 
 #earn_gold_effect
 EARN_GOLD_EFFECT_SIZE = (30,30)

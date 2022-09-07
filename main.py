@@ -1,4 +1,3 @@
-from tkinter import Button
 import pygame as pg
 from sys import exit
 from pygame.locals import *
@@ -62,8 +61,6 @@ def game(character):
         player = sp.Human()
     elif character == "wizard":
         player = sp.Wizard()
-    else: #기본값(오류 방지)
-        player = sp.Human()
 
     running = 1
     click = 0
@@ -114,16 +111,14 @@ def game(character):
                         player = sp.Human()
                     elif character == "wizard":
                         player = sp.Wizard()
-                    else: #기본값(오류 방지)
-                        player = sp.Human()
-                        
                     game_tick = 0
                     menu = 0
                     camera = c.Camera(player)
                     upgrade_sell = 0
                     selected_sprite = None
                     continue
-
+            
+            #메뉴 그리기
             SCREEN.blit(menu_frame_image,menu_frame)
             SCREEN.blit(button_image,goto_main_menu)
             SCREEN.blit(button_image,go_back)
@@ -132,7 +127,7 @@ def game(character):
             pg.display.flip()
             continue
         
-        #플레이어 죽어서 없을 시 게임 종료
+        #플레이어의 체력이 0이하이면 게임 종료
         if player.hp <= 0:
             SCREEN.fill(BLACK)
             if click:
@@ -159,6 +154,7 @@ def game(character):
         #스프라이트 업데이트
         sp.all_sprites.update()
         
+        #건물 설치 버튼
         pg.draw.rect(SCREEN, (255, 0, 0), build_button)
 
         #버튼 클릭시 실행
@@ -166,7 +162,7 @@ def game(character):
             if click:
                 build(camera,player)
         
-
+        #건물이 마우스와 충돌시 외각선
         for building in sp.building_sprites:
             if building.shown_rect.collidepoint((mx,my)):
                 SCREEN.blit(building.outline_image,building.shown_rect)
@@ -174,6 +170,7 @@ def game(character):
                     upgrade_sell = 1
                     selected_sprite = building
         
+        #건물 업데이트 및 판매
         if upgrade_sell:
             upgrade_button.midbottom = selected_sprite.shown_rect.topright
             pg.draw.rect(SCREEN,RED,upgrade_button.move(0,-10))
@@ -275,12 +272,14 @@ def build(camera,player):
         #마우스 위치 가져오기
         mx, my = pg.mouse.get_pos()
 
+        
         if selected == "wall":
             if not wall_button.collidepoint((mx, my)):
                 wall_rect.center = (mx,my)
                 if collision_check(wall_rect,camera):
                     SCREEN.blit(wall_red,wall_rect.topleft)
-
+                    if not click:
+                        sp.Message("You can't place building here",RED)
                 else:
                     SCREEN.blit(wall_green,wall_rect.topleft)
                     if not click:
@@ -288,13 +287,15 @@ def build(camera,player):
                             sp.Wall(pg.math.Vector2(mx+camera.offset.x,516))
                             player.gold -= WALL_PRICE[0]
                         else:
-                            pass
+                            sp.Message("You don't have enough money",RED)
+
         elif selected == "canon":
             if not canon_button.collidepoint((mx,my)):
                 canon_rect.center = (mx,my)
                 if collision_check(canon_rect,camera):
                     SCREEN.blit(canon_red,canon_rect.topleft)
-
+                    if not click:
+                        sp.Message("You can't place building here",RED)
                 else:
                     SCREEN.blit(canon_green,canon_rect.topleft)
                     if not click:
@@ -302,14 +303,15 @@ def build(camera,player):
                             sp.Canon(pg.math.Vector2(mx+camera.offset.x,516))
                             player.gold -= CANON_PRICE[0]
                         else:
-                            pass
+                            sp.Message("You don't have enough money",RED)
 
         elif selected == "mine":
             if not mine_button.collidepoint((mx,my)):
                 mine_rect.center = (mx,my)
                 if collision_check(mine_rect,camera):
                     SCREEN.blit(mine_red,mine_rect.topleft)
-
+                    if not click:
+                        sp.Message("You can't place building here",RED)
                 else:
                     SCREEN.blit(mine_green,mine_rect.topleft)
                     if not click:
@@ -317,7 +319,7 @@ def build(camera,player):
                             sp.Mine(player,pg.math.Vector2(mx+camera.offset.x,516))
                             player.gold -= MINE_PRICE[0]
                         else:
-                            pass
+                            sp.Message("You don't have enough money",RED)
 
         if click:
             if exit_button.collidepoint((mx,my)):
@@ -325,7 +327,6 @@ def build(camera,player):
                     running = 0
             elif cancel_button.collidepoint((mx,my)):
                 selected = ""
-
             elif wall_button.collidepoint((mx, my)):
                 selected = "wall"
             elif canon_button.collidepoint((mx,my)):
