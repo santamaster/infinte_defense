@@ -58,10 +58,10 @@ class Camera():
             for message in sp.message_sprites:
                 SCREEN.blit(message.text,message.rect)    
 
-        #fps 표시(선택)
-        if show_fps:
-            msg_fps = myfont.render("fps : {}".format(int((CLOCK.get_fps()))),True,WHITE)
-            SCREEN.blit(msg_fps,(10,100))
+        # #fps 표시(선택)
+        # if show_fps:
+        #     msg_fps = myfont.render(f"fps : {int((CLOCK.get_fps()))}",True,WHITE)
+        #     SCREEN.blit(msg_fps,(10,100))
 
     #어두워진 화면을 그림
     def darkened_draw(self):

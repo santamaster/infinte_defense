@@ -15,22 +15,22 @@ def reset():
         sprite.kill()
 
 #적 생성 시스템
-def enemy_spawn(game_sec):
+def enemy_spawn(game_sec,player):
     spawn_location = "left","right"
 
     #시간이 지날수록 적이 더 빨리 나옴
     if game_sec <= 30:      #30초 이내
         if random()*FPS <= 0.2:  #1초당 0.1마리
-            sp.Zombie(choice(spawn_location))
+            sp.Zombie(choice(spawn_location),player)
     elif game_sec <= 60:    #30~60초
         if random()*FPS <= 0.3:  #1초당 0.2마리
-            sp.Zombie(choice(spawn_location))
+            sp.Zombie(choice(spawn_location),player)
     elif game_sec <= 120:   #60~120초
         if random()*FPS <= 0.5:  #1초당 0.5마리
-            sp.Zombie(choice(spawn_location))
+            sp.Zombie(choice(spawn_location),player)
     else:                   #120초 이후
         if random()*FPS <= 1:    #1초당 1마리
-            sp.Zombie(choice(spawn_location))
+            sp.Zombie(choice(spawn_location),player)
 
 
 
@@ -151,7 +151,7 @@ def game(character):
             continue
 
         #적 생성
-        enemy_spawn(game_sec)
+        enemy_spawn(game_sec,player)
 
         #카메라 움직이기
         camera.player_follow()
@@ -211,8 +211,6 @@ def game(character):
             elif click:
                 upgrade_sell = 0
                 selected_sprite = None
-        #레벨업
-        
 
         #플레이어 hp표시
         SCREEN.blit(hp_frame_img,(WIDTH - HP_FRAME_WIDTH - HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))#체력바 프레임
@@ -220,12 +218,19 @@ def game(character):
             player.hp / player.max_hp * HP_FRAME_WIDTH*24/25,HP_FRAME_HEIGHT*4/5])
 
         #현재 골드 표시
-        msg_gold = myfont.render("gold : {}".format(player.gold),True,WHITE)
+        msg_gold = myfont.render(f"골드 : {player.gold}",True,WHITE)
         SCREEN.blit(msg_gold,(10,10))
 
         #시간 표시
-        msg_time = myfont.render("{}분 {}초".format(game_sec//60,game_sec%60),True,WHITE)
+        msg_time = myfont.render(f"{game_sec//60}분 {game_sec%60}초",True,WHITE)
         SCREEN.blit(msg_time,(10,50))
+        
+        #플레이어 레벨 표시
+        msg_level = myfont.render(f"레벨 : {player.level}",True,WHITE)
+        SCREEN.blit(msg_level,(10,90))
+        #플레이어 경험치 표시
+        msg_exp = myfont.render(f"경험치 : {player.exp}/{player.reqired_exp}",True,WHITE)
+        SCREEN.blit(msg_exp,(10,130))
 
         pg.display.flip()
 

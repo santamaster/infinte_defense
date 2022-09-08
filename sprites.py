@@ -45,7 +45,9 @@ class Player(pg.sprite.Sprite):
         self.gold_cooldown = None
         self.gold_counter = 0
         self.level = 1
+        self.max_level = PLAYER_MAX_LEVEL
         self.exp = 0
+        self.reqired_exp = PLAYER_REQIRED_EXP[self.level-1]
         #통계
         self.total_gold = 0
         self.kill_zombie_count = 0
@@ -83,6 +85,16 @@ class Player(pg.sprite.Sprite):
         if self.hp <= 0:
             self.kill()
 
+    def get_exp(self,exp):
+        self.exp += exp
+        if self.exp >= self.reqired_exp:
+            self.exp -= self.reqired_exp
+            self.level_up()
+    def level_up(self):
+        if self.level < self.max_level:
+            self.level += 1
+            self.reqired_exp = self.reqired_exp[self.level-1]
+
 #인간
 class Human(Player):
     def __init__(self):
@@ -114,11 +126,12 @@ class Wizard(Player):
 
 #적
 class Enemy(pg.sprite.Sprite):
-    def __init__(self):
+    def __init__(self,player):
         super().__init__()
         enemy_sprites.add(self)
         creature_sprites.add(self)
         all_sprites.add(self)
+        self.player = player
         self.max_hp = None
         self.hp = None
         self.damage = None
@@ -136,6 +149,7 @@ class Enemy(pg.sprite.Sprite):
         self.first_attack_counter = 0
         self.first_attack = 0
         self.status = None
+        self.exp = 0
     def attack(self):
         attackable_list = attackable_sprites.sprites()
         index = self.range_rect.collidelist(attackable_list)
@@ -159,16 +173,14 @@ class Enemy(pg.sprite.Sprite):
             self.status = "move"
 
     def move(self):
-
-        #적과 가장 가까이 있는 플레이어를 타겟
+        #플레이어를 향해 이동
         if player_sprites:
-            target = sorted(player_sprites.sprites(),key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
             if self.status == "attack":
                 return
-            if target.vector.x - self.vector.x > 0:
+            if self.player.vector.x - self.vector.x > 0:
                 self.vector.x += self.vel
                 self.status = "move"
-            elif target.vector.x - self.vector.x < 0:
+            elif self.player.vector.x - self.vector.x < 0:
                 self.vector.x -= self.vel
                 self.status = "move"
 
@@ -179,17 +191,20 @@ class Enemy(pg.sprite.Sprite):
         self.attack()
         self.move()
         if self.hp <= 0:
+            self.player.get_exp(self.exp)
             self.kill()
             self.hp_bar.kill()
+            
         self.hp_bar.update(self)
 
         
 #좀비
 class Zombie(Enemy):
-    def __init__(self,spawn_location):
-        super().__init__()
+    def __init__(self,spawn_location,player):
+        super().__init__(player)
         self.max_hp = ZOMBIE_HP
         self.hp = ZOMBIE_HP
+        self.exp = ZOMBIE_EXP
         self.hp_bar_width = ZOMBIE_HP_BAR_WIDTH
         self.attack_dmg = ZOMBIE_DMG
         self.attack_cooldown = ZOMBIE_COOLDONW
@@ -211,6 +226,7 @@ class Zombie(Enemy):
         self.attack()
         self.move()
         if self.hp <= 0:
+            self.player.get_exp(self.exp)
             self.kill()
             self.hp_bar.kill()
         self.hp_bar.update(self)

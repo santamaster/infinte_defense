@@ -27,7 +27,6 @@ PLAYER_JUMP_PW = 30
 GRAVITY = 3#중력
 REFUND_RATE = 0.7
 MESSAGE_COOLDOWN = 1*FPS
-LEVEL_UP_EXP = [1000,1500,2000,2500,3000,4500,5000]
 
 
 #크기 정하기
@@ -66,7 +65,11 @@ hp_frame_img = pg.transform.scale(pg.image.load("resources\\images\\hp_bar_frame
 MENU_FRAME = pg.image.load("resources\\images\\menu_frame.png").convert_alpha()
 BUTTON = pg.image.load("resources\\images\\button.png").convert_alpha()
 
-#human
+#PLAYER
+PLAYER_REQIRED_EXP = [1000,1500,2000,3000,5000]
+PLAYER_MAX_LEVEL = 6
+
+#HUMAN
 human_img = pg.image.load("resources\\images\\human.png").convert_alpha()
 HUMAN_VEL = 10
 HUMAN_HP = 1000
@@ -92,6 +95,7 @@ ZOMBIE_COOLDONW = 1*FPS#1초
 ZOMBIE_FIRST_COOLDOWN = 0.1*FPS#0.1초
 ZOMBIE_RANGE = 10
 ZOMBIE_HP_BAR_WIDTH = 70
+ZOMBIE_EXP = 20
 
 #WALL
 WALL_IMAGE_SIZE = (100,150)
