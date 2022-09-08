@@ -17,7 +17,6 @@ SCREEN = pg.display.set_mode((WIDTH,HEIGHT))
 CLOCK = pg.time.Clock()
 FPS = 60
 pg.display.set_caption("game_project")
-LEVEL = 1
 CAMERA_VEL = 10
 HP_FRAME_WIDTH = 400
 HP_FRAME_HEIGHT = 40
@@ -28,6 +27,8 @@ PLAYER_JUMP_PW = 30
 GRAVITY = 3#중력
 REFUND_RATE = 0.7
 MESSAGE_COOLDOWN = 1*FPS
+LEVEL_UP_EXP = [1000,1500,2000,2500,3000,4500,5000]
+
 
 #크기 정하기
 def set_size(size,*images):
@@ -49,16 +50,13 @@ def fill(surface, color):
     return new_surface
 
 #외각선 따기
-def get_outline(image,outline_thickness=0.02,color=(255,255,255,255)):
+def get_outline(image,outline_thickness=3,color=(255,255,255,255)):
     mask = pg.mask.from_surface(image)
     mask_size = mask.get_size()
-    scaled_mask = mask.scale((mask_size[0]*(1-outline_thickness*2),mask_size[1]*(1-outline_thickness*2)))
-
-    mask.erase(scaled_mask,(mask_size[0]*outline_thickness,mask_size[1]*outline_thickness))
+    scaled_mask = mask.scale((mask_size[0]-outline_thickness*2,mask_size[1]-outline_thickness*2))
+    mask.erase(scaled_mask,(outline_thickness,outline_thickness))
 
     return mask.to_surface(setcolor=color,unsetcolor=(0,0,0,0))
-
-
 
 #폰트,배경 및 기타
 myfont = pg.font.Font("resources\\font\\NeoDunggeunmoPro-Regular.ttf",30)
@@ -73,6 +71,7 @@ human_img = pg.image.load("resources\\images\\human.png").convert_alpha()
 HUMAN_VEL = 10
 HUMAN_HP = 1000
 HUMAN_GOLD_COOLDOWN = 0.5*FPS #0.1초
+HUMAN_GOLD_OUTPUT = 1
 HUMAN_START_GOLD = 1000
 
 #WIZARD
@@ -80,6 +79,7 @@ wizard_img = pg.image.load("resources\\images\\human.png").convert_alpha()
 WIZARD_VEL = 15
 WIZARD_HP = 1000
 WIZARD_GOLD_COOLDOWN = 0.5*FPS #0.1초
+WIZARD_GOLD_OUTPUT = 1
 WIZARD_START_GOLD = 1000
 
 #ZOMBIE
@@ -91,7 +91,7 @@ ZOMBIE_DMG = 50
 ZOMBIE_COOLDONW = 1*FPS#1초
 ZOMBIE_FIRST_COOLDOWN = 0.1*FPS#0.1초
 ZOMBIE_RANGE = 10
-ZOMBIE_HP_BAR_WIDTH = 100
+ZOMBIE_HP_BAR_WIDTH = 70
 
 #WALL
 WALL_IMAGE_SIZE = (100,150)

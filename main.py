@@ -4,11 +4,14 @@ from pygame.locals import *
 from setting import *
 import sprites as sp
 import camera as c
+import ability as ab
 from random import random,choice
 
 #초기화
 def reset():
     for sprite in sp.all_sprites:
+        sprite.kill()
+    for sprite in sp.hp_bar_sprites:
         sprite.kill()
 
 #적 생성 시스템
@@ -37,23 +40,28 @@ build_button.center = (WIDTH-100,HEIGHT-25)
 menu_frame_image = MENU_FRAME
 menu_frame = menu_frame_image.get_rect()
 menu_frame.center = (WIDTH/2,HEIGHT/2)
+
 button_image = BUTTON
+
 goto_main_menu = button_image.get_rect()
 goto_main_menu.center = (WIDTH/2,HEIGHT/2 + 150)
 
 go_back = button_image.get_rect()
-go_back.center = (WIDTH/2,HEIGHT/2 + 50)
+go_back.center = (WIDTH/2,HEIGHT/2 - 50)
+
+restart = button_image.get_rect()
+restart.center = (WIDTH/2,HEIGHT/2 + 50)
 
 goto_mainmenu_defeat = button_image.get_rect()
 goto_mainmenu_defeat.center = (WIDTH/2,HEIGHT/2)
 
-restart = button_image.get_rect()
-restart.center = (WIDTH/2,HEIGHT/2 - 50)
-
 upgrade_button = pg.Rect(0,0,50,50)
 sell_button = pg.Rect(0,0,50,50)
 
-    
+special_ability1 = pg.Rect(116.5,134,300,500)
+special_ability2 = pg.Rect(553,134,300,500)
+special_ability3 = pg.Rect(949.5,134,300,500)
+
 #게임
 def game(character):
     
@@ -100,11 +108,11 @@ def game(character):
             camera.darkened_draw()
 
             if click:
-                if goto_main_menu.collidepoint((mx,my)):
+                if go_back.collidepoint((mx,my)):
+                    menu = 0
+                elif goto_main_menu.collidepoint((mx,my)):
                     reset()
                     break
-                elif go_back.collidepoint((mx,my)):
-                    menu = 0
                 elif restart.collidepoint((mx,my)):
                     reset()
                     if character == "human":
@@ -185,14 +193,13 @@ def game(character):
                     elif player.gold >= selected_sprite.upgrade_price:
                         player.gold -= selected_sprite.upgrade_price
                         selected_sprite.upgrade()
+                        sp.Message(f"upgrade to level {selected_sprite.level}",WHITE)
                         upgrade_sell = 0
                         selected_sprite = None
                     elif player.gold <= selected_sprite.upgrade_price:
                         sp.Message("You don't have enough money",RED)
                         upgrade_sell = 0
                         selected_sprite = None
-                else:
-                    pass
             elif sell_button.collidepoint((mx,my)):
                 if click:
                     player.gold += int(selected_sprite.price * REFUND_RATE)
@@ -204,6 +211,8 @@ def game(character):
             elif click:
                 upgrade_sell = 0
                 selected_sprite = None
+        #레벨업
+        
 
         #플레이어 hp표시
         SCREEN.blit(hp_frame_img,(WIDTH - HP_FRAME_WIDTH - HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))#체력바 프레임
@@ -284,7 +293,7 @@ def build(camera,player):
                     SCREEN.blit(wall_green,wall_rect.topleft)
                     if not click:
                         if player.gold >= WALL_PRICE[0]:
-                            sp.Wall(pg.math.Vector2(mx+camera.offset.x,516))
+                            sp.Wall(pg.math.Vector2(mx+camera.offset.x,516),player)
                             player.gold -= WALL_PRICE[0]
                         else:
                             sp.Message("You don't have enough money",RED)
@@ -300,7 +309,7 @@ def build(camera,player):
                     SCREEN.blit(canon_green,canon_rect.topleft)
                     if not click:
                         if player.gold >= CANON_PRICE[0]:
-                            sp.Canon(pg.math.Vector2(mx+camera.offset.x,516))
+                            sp.Canon(pg.math.Vector2(mx+camera.offset.x,516),player)
                             player.gold -= CANON_PRICE[0]
                         else:
                             sp.Message("You don't have enough money",RED)
@@ -316,7 +325,7 @@ def build(camera,player):
                     SCREEN.blit(mine_green,mine_rect.topleft)
                     if not click:
                         if player.gold >= MINE_PRICE[0]:
-                            sp.Mine(player,pg.math.Vector2(mx+camera.offset.x,516))
+                            sp.Mine(pg.math.Vector2(mx+camera.offset.x,516),player)
                             player.gold -= MINE_PRICE[0]
                         else:
                             sp.Message("You don't have enough money",RED)

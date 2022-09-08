@@ -41,9 +41,14 @@ class Player(pg.sprite.Sprite):
         self.jump_vel = 0
         self.jump_pw = 0
         self.gold = 0
+        self.gold_output = 1
         self.gold_cooldown = None
         self.gold_counter = 0
-
+        self.level = 1
+        self.exp = 0
+        #통계
+        self.total_gold = 0
+        self.kill_zombie_count = 0
 
     def move(self):
         #키 입력에 따른 플레이어 이동
@@ -73,7 +78,8 @@ class Player(pg.sprite.Sprite):
         self.gold_counter += 1
         if self.gold_counter >= self.gold_cooldown:
             self.gold_counter = 0
-            self.gold += 1
+            self.gold += self.gold_output
+            self.total_gold += self.gold_output
         if self.hp <= 0:
             self.kill()
 
@@ -90,6 +96,7 @@ class Human(Player):
         self.vel = HUMAN_VEL
         self.gold = HUMAN_START_GOLD
         self.gold_cooldown = HUMAN_GOLD_COOLDOWN
+        self.gold_output = HUMAN_GOLD_OUTPUT
 #마법사
 class Wizard(Player):
     def __init__(self):
@@ -103,6 +110,7 @@ class Wizard(Player):
         self.vel = WIZARD_VEL
         self.gold = WIZARD_START_GOLD
         self.gold_cooldown = WIZARD_GOLD_COOLDOWN
+        self.gold_output = WIZARD_GOLD_OUTPUT
 
 #적
 class Enemy(pg.sprite.Sprite):
@@ -172,6 +180,7 @@ class Enemy(pg.sprite.Sprite):
         self.move()
         if self.hp <= 0:
             self.kill()
+            self.hp_bar.kill()
         self.hp_bar.update(self)
 
         
@@ -198,14 +207,21 @@ class Zombie(Enemy):
             self.rect.midbottom = self.vector
             self.range_rect.center = self.vector
         self.hp_bar = Hp_bar(self,self.hp_bar_width)
-        
+    def update(self):
+        self.attack()
+        self.move()
+        if self.hp <= 0:
+            self.kill()
+            self.hp_bar.kill()
+        self.hp_bar.update(self)
 #건물
 class Building(pg.sprite.Sprite):
-    def __init__(self):
+    def __init__(self,player):
         super().__init__()
         building_sprites.add(self)
         attackable_sprites.add(self)
         all_sprites.add(self)
+        self.player = player
         self.max_hp = None
         self.hp = None
         self.image = None
@@ -223,13 +239,14 @@ class Building(pg.sprite.Sprite):
     def update(self):
         if self.hp <= 0:
             self.kill()
+            self.hp_bar.kill()
         self.hp_bar.update(self)
 
 
 #장벽
 class Wall(Building):
-    def __init__(self,vector):
-        super().__init__()
+    def __init__(self,vector,player):
+        super().__init__(player)
         wall_sprites.add(self)
         self.level = 1
         self.max_level = WALL_MAX_LEVEL
@@ -260,8 +277,8 @@ class Wall(Building):
 
 #대포
 class Canon(Building):
-    def __init__(self,vector):
-        super().__init__()
+    def __init__(self,vector,player):
+        super().__init__(player)
         canon_sprites.add(self)
         self.level = 1
         self.max_level = CANON_MAX_LEVEL
@@ -343,6 +360,7 @@ class Canon(Building):
         self.attack()
         if self.hp <= 0:
             self.kill()
+            self.hp_bar.kill()
         self.hp_bar.update(self)
 
 #포탄
@@ -383,8 +401,8 @@ class CanonShot(pg.sprite.Sprite):
         self.attack()
 
 class Mortar(Building):
-    def __init__(self,vector):
-        super().__init__()
+    def __init__(self,vector,player):
+        super().__init__(player)
         self.max_hp = MORTAR_HP
         self.hp = MORTAR_HP
         self.damage = MORTAR_DMG
@@ -408,14 +426,13 @@ class Mortar(Building):
         pass
 
 class Mine(Building):
-    def __init__(self,player,vector):
-        super().__init__()
+    def __init__(self,vector,player):
+        super().__init__(player)
         mine_sprites.add(self)
         self.level = 1
         self.max_level = MINE_MAX_LEVEL
         self.max_hp = MINE_HP[self.level-1]
         self.hp = MINE_HP[self.level-1]
-        self.player = player
         self.image = MINE_IMAGE
         self.outline_image = outline_mine
         self.rect = self.image.get_rect()
@@ -431,9 +448,10 @@ class Mine(Building):
         self.hp_bar = Hp_bar(self,self.hp_bar_width)
     
     def mining(self):
-        self.mining_counter +=1
+        self.mining_counter += 1
         if self.mining_counter >= self.gold_cooldown:
             self.player.gold += self.gold_output
+            self.player.total_gold +=self.gold_output
             self.mining_counter = 0
             Earn_gold_effect(self)
             
@@ -451,11 +469,12 @@ class Mine(Building):
     def update(self):
         if self.hp <= 0:
             self.kill()
+            self.hp_bar.kill()
         self.mining()
         self.hp_bar.update(self)
         
 
-#건물 및 적 체력
+#건물 및 적 체력(각 스프라이트에 종속되어 있음)
 class Hp_bar(pg.sprite.Sprite):
     def __init__(self,sprite,width):
         super().__init__()

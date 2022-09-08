@@ -9,6 +9,11 @@ class Camera():
         self.player = player #따라다녀야 할 플레이어
         self.offset = pg.math.Vector2(self.player.vector.x-WIDTH/2,0)
         self.alpha = 128    
+        self.screen_rect = SCREEN.get_rect()
+        self.veil = pg.Surface(self.screen_rect.size)
+        self.veil.fill((0, 0, 0))
+        self.veil.set_alpha(self.alpha)
+
     #player 따라다니기
     def player_follow(self):
         self.offset.x = self.player.vector.x-WIDTH/2
@@ -60,9 +65,6 @@ class Camera():
 
     #어두워진 화면을 그림
     def darkened_draw(self):
-        self.screen_rect = SCREEN.get_rect()
-        self.veil = pg.Surface(self.screen_rect.size)
-        self.veil.fill((0, 0, 0))
 
         SCREEN.blit(background_img,(-self.offset.x,-self.offset.y))
 
@@ -78,7 +80,6 @@ class Camera():
         SCREEN.blit(ground_img,(-self.offset.x,-self.offset.y))
 
         #화면 어둡게 만들기
-        self.veil.set_alpha(self.alpha)
         SCREEN.blit(self.veil,(0, 0))
 
         #메세지 업데이트
