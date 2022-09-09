@@ -5,7 +5,7 @@ from setting import *
 import sprites as sp
 import camera as c
 import ability as ab
-from random import random,choice
+from random import random,choice,sample
 
 #초기화
 def reset():
@@ -32,7 +32,8 @@ def enemy_spawn(game_sec,player):
         if random()*FPS <= 1:    #1초당 1마리
             sp.Zombie(choice(spawn_location),player)
 
-
+def get_ablity():
+    pass
 
 build_button = pg.Rect(WIDTH/2,HEIGHT/2, 200, 50)
 build_button.center = (WIDTH-100,HEIGHT-25)
@@ -64,12 +65,10 @@ special_ability3 = pg.Rect(949.5,134,300,500)
 
 #게임
 def game(character):
-    
     if character == "human":
         player = sp.Human()
     elif character == "wizard":
         player = sp.Wizard()
-
     running = 1
     click = 0
     game_tick = 0
@@ -77,6 +76,9 @@ def game(character):
     camera = c.Camera(player)
     upgrade_sell = 0
     selected_sprite = None
+    select_ability = 0
+    player_level = 1
+    ability_list = []
     while running:
         game_tick += 1
         game_sec = game_tick//FPS
@@ -101,7 +103,37 @@ def game(character):
                     click = 1
         #마우스 위치 가져오기
         mx, my = pg.mouse.get_pos()
+
+        #플레이어 레벨 업
+        if player_level < player.level:
+            player_level = player.level
+
+            if player_level == 2:
+                ability123_list = sample(ab.level_2_ability,3)
+            
+            select_ability = 1
+            sp.Message("level_up!",GREEN)
         
+        if select_ability:
+            if click:
+                if special_ability1.collidepoint((mx,my)):
+                    ability123_list[0]()
+                    select_ability = 0
+                elif special_ability2.collidepoint((mx,my)):
+                    ability123_list[1]()
+                    select_ability = 0
+                elif special_ability3.collidepoint((mx,my)):
+                    ability123_list[2]()
+                    select_ability = 0
+            camera.darkened_draw()
+
+            pg.draw.rect(SCREEN,RED,special_ability1)
+            pg.draw.rect(SCREEN,RED,special_ability2)
+            pg.draw.rect(SCREEN,RED,special_ability3)
+
+            pg.display.flip()
+            continue
+
         #메뉴 실행시
         if menu:
             #어두워진 화면 그리기(스프라이트 업데이트 안함)
@@ -124,6 +156,8 @@ def game(character):
                     camera = c.Camera(player)
                     upgrade_sell = 0
                     selected_sprite = None
+                    player_level = 1
+
                     continue
             
             #메뉴 그리기
@@ -145,7 +179,7 @@ def game(character):
 
             SCREEN.blit(button_image,goto_mainmenu_defeat)
 
-            msg_defeat = myfont.render("YOU DIE",True,WHITE)
+            msg_defeat = MYFONT.render("YOU DIE",True,WHITE)
             SCREEN.blit(msg_defeat,(WIDTH/2,HEIGHT/3))
             pg.display.flip()
             continue
@@ -211,29 +245,36 @@ def game(character):
             elif click:
                 upgrade_sell = 0
                 selected_sprite = None
-
+        
         #플레이어 hp표시
-        SCREEN.blit(hp_frame_img,(WIDTH - HP_FRAME_WIDTH - HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))#체력바 프레임
+        SCREEN.blit(HP_FRAME_IMG,(WIDTH - HP_FRAME_WIDTH - HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))#체력바 프레임
         pg.draw.rect(SCREEN,RED,[WIDTH - HP_FRAME_INTERVAL - HP_FRAME_WIDTH*49/50,HP_FRAME_INTERVAL + HP_FRAME_HEIGHT/10, \
             player.hp / player.max_hp * HP_FRAME_WIDTH*24/25,HP_FRAME_HEIGHT*4/5])
 
         #현재 골드 표시
-        msg_gold = myfont.render(f"골드 : {player.gold}",True,WHITE)
+        msg_gold = MYFONT.render(f"골드 : {player.gold}",True,WHITE)
         SCREEN.blit(msg_gold,(10,10))
 
         #시간 표시
-        msg_time = myfont.render(f"{game_sec//60}분 {game_sec%60}초",True,WHITE)
+        msg_time = MYFONT.render(f"{game_sec//60}분 {game_sec%60}초",True,WHITE)
         SCREEN.blit(msg_time,(10,50))
         
         #플레이어 레벨 표시
-        msg_level = myfont.render(f"레벨 : {player.level}",True,WHITE)
+        msg_level = MYFONT.render(f"레벨 : {player.level}",True,WHITE)
         SCREEN.blit(msg_level,(10,90))
+
         #플레이어 경험치 표시
-        msg_exp = myfont.render(f"경험치 : {player.exp}/{player.reqired_exp}",True,WHITE)
+        msg_exp = MYFONT.render(f"경험치 : {player.exp}/{player.reqired_exp}",True,WHITE)
         SCREEN.blit(msg_exp,(10,130))
 
+        #총 골드 표시
+        msg_total_gold = MYFONT.render(f"총 골드 : {player.total_gold}",True,WHITE)
+        SCREEN.blit(msg_total_gold,(10,170))
+        #fps 표시(선택)
+        msg_fps = MYFONT.render(f"fps : {int((CLOCK.get_fps()))}",True,WHITE)
+        SCREEN.blit(msg_fps,(10,210))
+        
         pg.display.flip()
-
 
 #건물 설치시 x축 충돌 확인
 def collision_check(rect,camera):
@@ -297,9 +338,9 @@ def build(camera,player):
                 else:
                     SCREEN.blit(wall_green,wall_rect.topleft)
                     if not click:
-                        if player.gold >= WALL_PRICE[0]:
+                        if player.gold >= sp.Wall.price[0]:
                             sp.Wall(pg.math.Vector2(mx+camera.offset.x,516),player)
-                            player.gold -= WALL_PRICE[0]
+                            player.gold -= sp.Wall.price[0]
                         else:
                             sp.Message("You don't have enough money",RED)
 
@@ -313,9 +354,9 @@ def build(camera,player):
                 else:
                     SCREEN.blit(canon_green,canon_rect.topleft)
                     if not click:
-                        if player.gold >= CANON_PRICE[0]:
+                        if player.gold >= sp.Canon.price[0]:
                             sp.Canon(pg.math.Vector2(mx+camera.offset.x,516),player)
-                            player.gold -= CANON_PRICE[0]
+                            player.gold -= sp.Canon.price[0]
                         else:
                             sp.Message("You don't have enough money",RED)
 
@@ -329,9 +370,9 @@ def build(camera,player):
                 else:
                     SCREEN.blit(mine_green,mine_rect.topleft)
                     if not click:
-                        if player.gold >= MINE_PRICE[0]:
+                        if player.gold >= sp.Mine.price[0]:
                             sp.Mine(pg.math.Vector2(mx+camera.offset.x,516),player)
-                            player.gold -= MINE_PRICE[0]
+                            player.gold -= sp.Mine.price[0]
                         else:
                             sp.Message("You don't have enough money",RED)
 
@@ -358,7 +399,7 @@ def build(camera,player):
         pg.draw.rect(SCREEN, (0, 0, 255), mine_button)
 
         #현재 골드 표시
-        msg_gold = myfont.render("gold : {}".format(player.gold),True,WHITE)
+        msg_gold = MYFONT.render("gold : {}".format(player.gold),True,WHITE)
         SCREEN.blit(msg_gold,(10,10))
 
         pg.display.flip()
@@ -401,10 +442,10 @@ def main_menu():
                 game(character_list[select])
                 click = 0
         
-        msg_character = myfont.render("Character : {}".format(character_list[select]),True,WHITE)
+        msg_character = MYFONT.render("Character : {}".format(character_list[select]),True,WHITE)
         SCREEN.blit(msg_character,(WIDTH/2,HEIGHT/2 - 200))
 
-        msg_title = myfont.render("game_project",True,WHITE)
+        msg_title = MYFONT.render("game_project",True,WHITE)
         SCREEN.blit(msg_title,(WIDTH/2,100))
         
         pg.draw.rect(SCREEN, (255, 0, 0), play_button)

@@ -25,7 +25,7 @@ class Camera():
     def draw(self,show_hp=1,show_effect=1,show_message=1,show_fps=1):
         #배경과 모든 스프라이트를 반대방향으로 이동시킨뒤 화면 출력
         #배경 화면 출력
-        SCREEN.blit(background_img,(-self.offset.x,-self.offset.y))
+        SCREEN.blit(BACKGROUND_IMG,(-self.offset.x,-self.offset.y))
         for sprite in sp.all_sprites:
             #shown_rect는 화면에서의 스프라이트 위치
             sprite.shown_rect = sprite.rect.move(-self.offset.x,-self.offset.y)
@@ -39,10 +39,11 @@ class Camera():
         for sprite in sp.player_sprites:
             SCREEN.blit(sprite.image,sprite.shown_rect)
         
-        SCREEN.blit(ground_img,(-self.offset.x,-self.offset.y))
+        SCREEN.blit(GROUND_IMG,(-self.offset.x,-self.offset.y))
         
         #체력
         if show_hp:
+            sp.hp_bar_sprites.update()
             for sprite in sp.hp_bar_sprites:
                 sprite.shown_rect = sprite.rect.move(-self.offset.x,-self.offset.y)
                 pg.draw.rect(SCREEN,RED,sprite.shown_rect)
@@ -58,15 +59,10 @@ class Camera():
             for message in sp.message_sprites:
                 SCREEN.blit(message.text,message.rect)    
 
-        # #fps 표시(선택)
-        # if show_fps:
-        #     msg_fps = myfont.render(f"fps : {int((CLOCK.get_fps()))}",True,WHITE)
-        #     SCREEN.blit(msg_fps,(10,100))
-
     #어두워진 화면을 그림
     def darkened_draw(self):
 
-        SCREEN.blit(background_img,(-self.offset.x,-self.offset.y))
+        SCREEN.blit(BACKGROUND_IMG,(-self.offset.x,-self.offset.y))
 
         for sprite in sp.noncreature_sprites:
             SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
@@ -77,7 +73,7 @@ class Camera():
         for sprite in sp.player_sprites:
             SCREEN.blit(sprite.image,sprite.rect.move(-self.offset.x,-self.offset.y))
         
-        SCREEN.blit(ground_img,(-self.offset.x,-self.offset.y))
+        SCREEN.blit(GROUND_IMG,(-self.offset.x,-self.offset.y))
 
         #화면 어둡게 만들기
         SCREEN.blit(self.veil,(0, 0))

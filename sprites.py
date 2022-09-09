@@ -1,7 +1,7 @@
 import pygame as pg
 from pygame.locals import *
 from setting import *
-
+from random import random
 #스프라이트 그룹
 all_sprites = pg.sprite.Group()         #모든 스프라이트 그룹
 player_sprites = pg.sprite.Group()      #플레이어 스프라이트 그룹
@@ -22,6 +22,9 @@ hp_bar_sprites = pg.sprite.Group()
 
 #플레이어
 class Player(pg.sprite.Sprite):
+    max_level = 6
+    hp = 1000
+    vel = 10
     def __init__(self):
         super().__init__()
         all_sprites.add(self)
@@ -45,13 +48,8 @@ class Player(pg.sprite.Sprite):
         self.gold_cooldown = None
         self.gold_counter = 0
         self.level = 1
-        self.max_level = PLAYER_MAX_LEVEL
         self.exp = 0
-        self.reqired_exp = PLAYER_REQIRED_EXP[self.level-1]
-        #통계
-        self.total_gold = 0
-        self.kill_zombie_count = 0
-
+        self.reqired_exp = PLAYER_REQUIRED_EXP[self.level-1]
     def move(self):
         #키 입력에 따른 플레이어 이동
         keys = pg.key.get_pressed()
@@ -80,8 +78,8 @@ class Player(pg.sprite.Sprite):
         self.gold_counter += 1
         if self.gold_counter >= self.gold_cooldown:
             self.gold_counter = 0
-            self.gold += self.gold_output
             self.total_gold += self.gold_output
+            self.gold += self.gold_output
         if self.hp <= 0:
             self.kill()
 
@@ -93,36 +91,44 @@ class Player(pg.sprite.Sprite):
     def level_up(self):
         if self.level < self.max_level:
             self.level += 1
-            self.reqired_exp = self.reqired_exp[self.level-1]
+            self.reqired_exp = PLAYER_REQUIRED_EXP[self.level-1]
 
 #인간
 class Human(Player):
+    gold_cooldown = 0.5* FPS
+    gold_output = 1
+    start_gold = 1000
     def __init__(self):
         super().__init__()
-        self.max_hp = HUMAN_HP
-        self.hp = HUMAN_HP
-        self.image = human_img
+        self.max_hp = Player.hp
+        self.hp = Player.hp
+        self.image = HUMAN_IMAGE
         self.rect = self.image.get_rect()
         self.rect.midbottom = self.vector
         self.hp_bar = pg.Rect(0,0,10,self.rect.width)
-        self.vel = HUMAN_VEL
-        self.gold = HUMAN_START_GOLD
-        self.gold_cooldown = HUMAN_GOLD_COOLDOWN
-        self.gold_output = HUMAN_GOLD_OUTPUT
+        self.vel = Player.vel
+        self.gold = Human.start_gold
+        self.total_gold = Human.start_gold
+        self.gold_cooldown = Human.gold_cooldown
+        self.gold_output = Human.gold_output
 #마법사
 class Wizard(Player):
+    gold_cooldown = 0.5* FPS
+    gold_output = 1
+    start_gold = 1000
     def __init__(self):
         super().__init__()
-        self.max_hp = WIZARD_HP
-        self.hp = WIZARD_HP
-        self.image = wizard_img
+        self.max_hp = Player.hp
+        self.hp = Player.hp
+        self.image = WIZARD_IMAGE
         self.rect = self.image.get_rect()
         self.rect.midbottom = self.vector
         self.hp_bar = pg.Rect(0,0,10,self.rect.width)
-        self.vel = WIZARD_VEL
-        self.gold = WIZARD_START_GOLD
-        self.gold_cooldown = WIZARD_GOLD_COOLDOWN
-        self.gold_output = WIZARD_GOLD_OUTPUT
+        self.vel = Player.vel
+        self.gold = Wizard.start_gold
+        self.total_gold = Wizard.start_gold
+        self.gold_cooldown = Wizard.gold_cooldown
+        self.gold_output = Wizard.gold_output
 
 #적
 class Enemy(pg.sprite.Sprite):
@@ -193,26 +199,32 @@ class Enemy(pg.sprite.Sprite):
         if self.hp <= 0:
             self.player.get_exp(self.exp)
             self.kill()
-            self.hp_bar.kill()
-            
-        self.hp_bar.update(self)
-
         
 #좀비
 class Zombie(Enemy):
-    def __init__(self,spawn_location,player):
+    hp = [90,150,200]
+    attack_dmg = [50,70,100]
+    exp = [20,40,60]
+    attack_cooldown = 1 * FPS
+    first_attack_cooldown = 0.1*FPS
+    attack_range = 50
+    hp_bar_width = 70
+    max_level = 3
+    vel = 5
+    def __init__(self,spawn_location,player,level=1):
         super().__init__(player)
-        self.max_hp = ZOMBIE_HP
-        self.hp = ZOMBIE_HP
-        self.exp = ZOMBIE_EXP
-        self.hp_bar_width = ZOMBIE_HP_BAR_WIDTH
-        self.attack_dmg = ZOMBIE_DMG
-        self.attack_cooldown = ZOMBIE_COOLDONW
-        self.first_attack_cooldown = ZOMBIE_FIRST_COOLDOWN
-        self.vel = ZOMBIE_VEL
+        self.level = level
+        self.max_hp = Zombie.hp[self.level-1]
+        self.hp = Zombie.hp[self.level-1]
+        self.exp = Zombie.exp[self.level-1]
+        self.hp_bar_width = Zombie.hp_bar_width
+        self.attack_dmg = Zombie.attack_dmg[self.level-1]
+        self.attack_cooldown = Zombie.attack_cooldown
+        self.first_attack_cooldown = Zombie.first_attack_cooldown
+        self.vel = Zombie.vel
         self.image = ZOMBIE_IMAGE
         self.rect = self.image.get_rect()
-        self.range_rect = self.rect.inflate(2*ZOMBIE_RANGE,0)
+        self.range_rect = self.rect.inflate(2*Zombie.attack_range,0)
         if spawn_location == "right":
             self.vector = pg.math.Vector2(BG_WIDTH,516)
             self.rect.midbottom = self.vector
@@ -221,15 +233,14 @@ class Zombie(Enemy):
             self.vector = pg.math.Vector2(0,516)
             self.rect.midbottom = self.vector
             self.range_rect.center = self.vector
-        self.hp_bar = Hp_bar(self,self.hp_bar_width)
+        self.hp_bar = Hp_bar(self,Zombie.hp_bar_width)
     def update(self):
         self.attack()
         self.move()
         if self.hp <= 0:
             self.player.get_exp(self.exp)
             self.kill()
-            self.hp_bar.kill()
-        self.hp_bar.update(self)
+
 #건물
 class Building(pg.sprite.Sprite):
     def __init__(self,player):
@@ -255,52 +266,63 @@ class Building(pg.sprite.Sprite):
     def update(self):
         if self.hp <= 0:
             self.kill()
-            self.hp_bar.kill()
-        self.hp_bar.update(self)
 
 
 #장벽
 class Wall(Building):
+    price = [250,300]
+    hp = [1000,1500]
+    max_level = 2
+    hp_bar_width = 100
+
     def __init__(self,vector,player):
         super().__init__(player)
         wall_sprites.add(self)
         self.level = 1
-        self.max_level = WALL_MAX_LEVEL
-        self.price = WALL_PRICE[self.level-1]
-        self.upgrade_price = WALL_PRICE[self.level]
-        self.max_hp = WALL_HP[self.level-1]
-        self.hp = WALL_HP[self.level-1]
+        self.max_level = Wall.max_level
+        self.price = Wall.price[self.level-1]
+        self.upgrade_price = Wall.price[self.level]
+        self.max_hp = Wall.hp[self.level-1]
+        self.hp = Wall.hp[self.level-1]
         self.image = WALL_IMAGE
         self.outline_image = OUTLINE_WALL
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
         self.vector = vector
         self.rect.midbottom = self.vector
-        self.hp_bar_width = WALL_HP_BAR_WIDTH
-
-        self.hp_bar = Hp_bar(self,self.hp_bar_width)
+        self.hp_bar_width = Wall.hp_bar_width
+        self.hp_bar = Hp_bar(self,Wall.hp_bar_width)
 
     def upgrade(self):
         if self.level < self.max_level:
             self.level += 1
-            self.max_hp = WALL_HP[self.level-1]
-            self.hp = WALL_HP[self.level-1]
-            self.price = WALL_PRICE[self.level-1]
+            self.max_hp = Wall.hp[self.level-1]
+            self.hp = Wall.hp[self.level-1]
+            self.price = Wall.price[self.level-1]
             if self.level == self.max_level:
                 self.upgrade_price = None
             else:
-                self.upgrade_price = WALL_PRICE[self.level]
+                self.upgrade_price = Wall.price[self.level]
 
 #대포
 class Canon(Building):
+    price = [300,400,500]
+    hp = [500,700,1000]
+    attack_dmg = [30,50,70]
+    max_level = 3
+    first_attack_cooldown = 0.5 * FPS
+    attack_cooldown = 1 * FPS
+    attack_range = 800
+    enhanced_attack_chance = 0
+    enhanced_attack_damage = 1.5
+    hp_bar_width = 150
     def __init__(self,vector,player):
         super().__init__(player)
         canon_sprites.add(self)
         self.level = 1
-        self.max_level = CANON_MAX_LEVEL
-        self.max_hp = CANON_HP[self.level-1]
-        self.hp = CANON_HP[self.level-1]
-        self.attack_dmg = CANON_DMG[self.level-1]
+        self.max_hp = Canon.hp[self.level-1]
+        self.hp = Canon.hp[self.level-1]
+        self.attack_dmg = Canon.attack_dmg[self.level-1]
         self.vector = vector
         if self.vector.x >= BG_WIDTH/2:
             self.image = CANON_IMAGE
@@ -311,49 +333,57 @@ class Canon(Building):
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
         self.rect.midbottom = self.vector
-        self.attack_cooldown = CANON_COOLDOWN
         self.attack_counter = 0
-        self.first_attack_cooldown = CANON_FIRST_COOLDOWN
         self.first_attack_counter = 0
         self.first_attack = 0
-        self.attack_range = CANON_RANGE
-        self.price = CANON_PRICE[self.level-1]
-        self.upgrade_price = CANON_PRICE[self.level]
-        self.hp_bar_width = CANON_HP_BAR_WIDTH
-        self.hp_bar = Hp_bar(self,self.hp_bar_width)
+        self.price = Canon.price[self.level-1]
+        self.upgrade_price = Canon.price[self.level]
+        self.hp_bar = Hp_bar(self,Canon.hp_bar_width)
         
     def attack(self):
         #사거리 안에 있는 적
         enemy_in_range = [ sprite for sprite in enemy_sprites.sprites() \
-                if abs(sprite.vector.x - self.vector.x) <= self.attack_range]
+                if abs(sprite.vector.x - self.vector.x) <= Canon.attack_range]
 
         if enemy_in_range:
             #사거리 안에 있는 적들 중 가장 가까운 적
             target = sorted(enemy_in_range,key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
             if not self.first_attack:
                 self.first_attack_counter +=1
-                if self.first_attack_counter >=self.first_attack_cooldown:
+                if self.first_attack_counter >=Canon.first_attack_cooldown:
                     self.first_attack = 1
                     if target.vector.x - self.vector.x >= 0:
                         self.image = CANON_IMAGE
                         self.outline_image = OUTLINE_CANON
-                        CanonShot(self.attack_dmg,"right",self.vector)
+                        if Canon.enhanced_attack_chance >= random():
+                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage,"right",self.vector)
+                        else:
+                            CanonShot(self.attack_dmg,"right",self.vector)
                     elif target.vector.x - self.vector.x < 0:
                         self.image = CANON_IMAGE_L
                         self.outline_image = OUTLINE_CANON_L
-                        CanonShot(self.attack_dmg,"left",self.vector)
+                        if Canon.enhanced_attack_chance >= random():
+                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage,"left",self.vector)
+                        else:
+                            CanonShot(self.attack_dmg,"left",self.vector)
             else:
                 self.attack_counter += 1
-                if self.attack_counter >= self.attack_cooldown:
+                if self.attack_counter >= Canon.attack_cooldown:
                     self.attack_counter = 0
                     if target.vector.x - self.vector.x >= 0:
                         self.image = CANON_IMAGE
                         self.outline_image = OUTLINE_CANON
-                        CanonShot(self.attack_dmg,"right",self.vector)
+                        if Canon.enhanced_attack_chance >= random():
+                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage,"right",self.vector)
+                        else:
+                            CanonShot(self.attack_dmg,"right",self.vector)
                     elif target.vector.x - self.vector.x < 0:
                         self.image = CANON_IMAGE_L
                         self.outline_image = OUTLINE_CANON_L
-                        CanonShot(self.attack_dmg,"left",self.vector)
+                        if Canon.enhanced_attack_chance >= random():
+                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage,"left",self.vector)
+                        else:
+                            CanonShot(self.attack_dmg,"left",self.vector)
         else:
             self.first_attack_counter = 0
             self.attack_counter = 0
@@ -362,30 +392,28 @@ class Canon(Building):
         self.rect.midbottom = self.vector
 
     def upgrade(self):
-        if self.level < self.max_level:
+        if self.level < Canon.max_level:
             self.level += 1
-            self.max_hp = CANON_HP[self.level-1]
-            self.hp = CANON_HP[self.level-1]
-            self.price = CANON_PRICE[self.level-1]
-            self.attack_dmg = CANON_DMG[self.level-1]
-            if self.level == self.max_level:
+            self.max_hp = Canon.hp[self.level-1]
+            self.hp = Canon.hp[self.level-1]
+            self.price = Canon.price[self.level-1]
+            self.attack_dmg = Canon.attack_dmg[self.level-1]
+            if self.level == Canon.max_level:
                 self.upgrade_price = None
             else:
-                self.upgrade_price = CANON_PRICE[self.level]
+                self.upgrade_price = Canon.price[self.level]
     def update(self):
         self.attack()
         if self.hp <= 0:
             self.kill()
-            self.hp_bar.kill()
-        self.hp_bar.update(self)
 
 #포탄
 class CanonShot(pg.sprite.Sprite):
+    vel = 30
     def __init__(self,damage,direction,location):
         super().__init__()
         noncreature_sprites.add(self)
         all_sprites.add(self)
-        self.vel = CANONSHOT_VEL
         self.attack_dmg = damage
         self.direction = direction
         self.image = CANONSHOT_IMAGE
@@ -402,12 +430,12 @@ class CanonShot(pg.sprite.Sprite):
         
     def move(self):
         if self.direction == "right":
-            self.vector.x += self.vel
+            self.vector.x += CanonShot.vel
             if self.vector.x > BG_WIDTH:
                 self.kill()
 
         elif self.direction == "left":
-            self.vector.x -= self.vel
+            self.vector.x -= CanonShot.vel
             if self.vector.x < 0:
                 self.kill()
         self.rect.midbottom = self.vector
@@ -417,11 +445,16 @@ class CanonShot(pg.sprite.Sprite):
         self.attack()
 
 class Mortar(Building):
+    attack_range = 1200
+    attack_cooldown = 1*FPS
+    price = 500
+    hp = 500
+    attack_dmg = 100
     def __init__(self,vector,player):
         super().__init__(player)
-        self.max_hp = MORTAR_HP
-        self.hp = MORTAR_HP
-        self.damage = MORTAR_DMG
+        self.max_hp = Mortar.hp
+        self.hp = Mortar.hp
+        self.damage = Mortar.attack_dmg
         self.vector = vector
         if self.vector.x >= BG_WIDTH/2:
             self.image = MORTAR_IMAGE
@@ -431,63 +464,61 @@ class Mortar(Building):
             self.outline_image = OUTLINE_MORTAR_L
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
-
         self.rect.midbottom = self.vector
-        self.attack_cooldown = CANON_COOLDOWN
         self.attack_counter = 0
-        self.attack_range = CANON_RANGE
     def attack(self):
         pass
     def update(self):
         pass
 
 class Mine(Building):
+    hp = [300,400,600]
+    max_level = 3
+    price = [150,250,400]
+    gold_output = [20,40,80]
+    gold_cooldown = 2 * FPS
+    hp_bar_width = 150
     def __init__(self,vector,player):
         super().__init__(player)
         mine_sprites.add(self)
         self.level = 1
-        self.max_level = MINE_MAX_LEVEL
-        self.max_hp = MINE_HP[self.level-1]
-        self.hp = MINE_HP[self.level-1]
+        self.max_hp = Mine.hp[self.level-1]
+        self.hp = Mine.hp[self.level-1]
         self.image = MINE_IMAGE
-        self.outline_image = outline_mine
+        self.outline_image = OUTLINE_MINE
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
         self.vector = vector
         self.rect.midbottom = self.vector
-        self.gold_output = MINE_GOLD_OUTPUT[self.level-1]
-        self.gold_cooldown = MINE_GOLD_COOLDOWN
+        self.gold_output = Mine.gold_output[self.level-1]
         self.mining_counter = 0
-        self.price = MINE_PRICE[self.level-1]
-        self.upgrade_price = MINE_PRICE[self.level]
-        self.hp_bar_width = MINE_HP_BAR_WIDTH
-        self.hp_bar = Hp_bar(self,self.hp_bar_width)
+        self.price = Mine.price[self.level-1]
+        self.upgrade_price = Mine.price[self.level]
+        self.hp_bar = Hp_bar(self,Mine.hp_bar_width)
     
     def mining(self):
         self.mining_counter += 1
-        if self.mining_counter >= self.gold_cooldown:
+        if self.mining_counter >= Mine.gold_cooldown:
             self.player.gold += self.gold_output
-            self.player.total_gold +=self.gold_output
+            self.player.total_gold += self.gold_output
             self.mining_counter = 0
             Earn_gold_effect(self)
             
     def upgrade(self):
-        if self.level < self.max_level:
+        if self.level < Mine.max_level:
             self.level += 1
-            self.max_hp = MINE_HP[self.level-1]
-            self.hp = MINE_HP[self.level-1]
-            self.price = MINE_PRICE[self.level-1]
-            self.gold_output = MINE_GOLD_OUTPUT[self.level-1]
-            if self.level == self.max_level:
+            self.max_hp = Mine.hp[self.level-1]
+            self.hp = Mine.hp[self.level-1]
+            self.price = Mine.price[self.level-1]
+            self.gold_output = Mine.gold_output[self.level-1]
+            if self.level == Mine.max_level:
                 self.upgrade_price = None
             else:
-                self.upgrade_price = MINE_PRICE[self.level]
+                self.upgrade_price = Mine.price[self.level]
     def update(self):
         if self.hp <= 0:
             self.kill()
-            self.hp_bar.kill()
         self.mining()
-        self.hp_bar.update(self)
         
 
 #건물 및 적 체력(각 스프라이트에 종속되어 있음)
@@ -495,6 +526,7 @@ class Hp_bar(pg.sprite.Sprite):
     def __init__(self,sprite,width):
         super().__init__()
         hp_bar_sprites.add(self)
+        self.sprite = sprite
         self.max_hp = sprite.max_hp
         self.hp = sprite.hp
         self.width = width
@@ -503,11 +535,15 @@ class Hp_bar(pg.sprite.Sprite):
         self.rect = pg.Rect(0,0,self.width,10)
         self.rect.center = self.vector
         self.shown_rect = self.rect.copy()
-    def update(self,sprite):
-        self.hp = sprite.hp
+    def update(self):
+        self.hp = self.sprite.hp
+        self.max_hp = self.sprite.max_hp
         self.rect.width = self.width * self.hp / self.max_hp
-        self.vector = pg.math.Vector2(sprite.rect.centerx-self.width*(1-self.hp/self.max_hp)/2,sprite.rect.top-self.interval)
+        self.vector = pg.math.Vector2(self.sprite.rect.centerx-self.width*(1-self.hp/self.max_hp)/2,self.sprite.rect.top-self.interval)
         self.rect.center = self.vector
+
+        if not self.sprite.alive():
+            self.kill()
 
 #이펙트
 class Effect(pg.sprite.Sprite):
@@ -557,7 +593,7 @@ class Message(pg.sprite.Sprite):
         self.message = message
         self.color = color
         self.vector = pg.math.Vector2(WIDTH/2,100)
-        self.text = myfont.render(self.message,True,self.color)
+        self.text = MYFONT.render(self.message,True,self.color)
         self.rect = self.text.get_rect()
         self.rect.center = self.vector
         self.cooldown = MESSAGE_COOLDOWN
