@@ -13,6 +13,12 @@ def reset():
         sprite.kill()
     for sprite in sp.hp_bar_sprites:
         sprite.kill()
+    sp.Canon.self_healing = 0
+    sp.Mine.gold_cooldown_rate = 1
+    sp.Canon.enhanced_attack_chance = 0
+    sp.Canon.damage_rate = 1
+    sp.Enemy.damage_rate = 1
+
 
 #적 생성 시스템
 def enemy_spawn(game_sec,player):
@@ -56,8 +62,10 @@ restart.center = (WIDTH/2,HEIGHT/2 + 50)
 goto_mainmenu_defeat = button_image.get_rect()
 goto_mainmenu_defeat.center = (WIDTH/2,HEIGHT/2)
 
-upgrade_button = pg.Rect(0,0,50,50)
-sell_button = pg.Rect(0,0,50,50)
+upgrade_image = UPGRADE_BUTTON
+upgrade_button = upgrade_image.get_rect()
+sell_image = SELL_BUTTON
+sell_button = sell_image.get_rect()
 
 special_ability1 = pg.Rect(116.5,134,300,500)
 special_ability2 = pg.Rect(553,134,300,500)
@@ -110,7 +118,15 @@ def game(character):
 
             if player_level == 2:
                 ability123_list = sample(ab.level_2_ability,3)
-            
+            elif player_level == 3:
+                ability123_list = sample(ab.level_3_ability,3)
+            elif player_level == 4:
+                ability123_list = sample(ab.level_4_ability,3)
+            elif player_level == 5:
+                ability123_list = sample(ab.level_5_ability,3)
+            elif player_level == 6:
+                ability123_list = sample(ab.level_6_ability,3)
+
             select_ability = 1
             sp.Message("level_up!",GREEN)
         
@@ -211,13 +227,23 @@ def game(character):
                 if click:
                     upgrade_sell = 1
                     selected_sprite = building
+
         
         #건물 업데이트 및 판매
         if upgrade_sell:
-            upgrade_button.midbottom = selected_sprite.shown_rect.topright
-            pg.draw.rect(SCREEN,RED,upgrade_button.move(0,-10))
-            sell_button.midbottom = selected_sprite.shown_rect.topleft
-            pg.draw.rect(SCREEN,RED,sell_button.move(0,-10))
+            upgrade_button.midbottom = selected_sprite.shown_rect.bottomright
+            upgrade_button.move_ip(0,100)
+            SCREEN.blit(upgrade_image,upgrade_button)
+            sell_button.midbottom = selected_sprite.shown_rect.bottomleft
+            sell_button.move_ip(0,100)
+            SCREEN.blit(sell_image,sell_button)
+            
+            msg_sprite_level = MYFONT.render(f"{selected_sprite.level} level",True,WHITE)
+            sprite_level_rect = msg_sprite_level.get_rect()
+            sprite_level_rect.midbottom = selected_sprite.shown_rect.midtop
+            sprite_level_rect.move_ip(0,-30)
+
+            SCREEN.blit(msg_sprite_level,sprite_level_rect)
             if upgrade_button.collidepoint((mx,my)):
                 if click:
                     if selected_sprite.level == selected_sprite.max_level:

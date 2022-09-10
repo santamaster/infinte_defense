@@ -25,6 +25,7 @@ class Player(pg.sprite.Sprite):
     max_level = 6
     hp = 1000
     vel = 10
+    required_exp = [40,40,400,600,1000]
     def __init__(self):
         super().__init__()
         all_sprites.add(self)
@@ -49,7 +50,7 @@ class Player(pg.sprite.Sprite):
         self.gold_counter = 0
         self.level = 1
         self.exp = 0
-        self.reqired_exp = PLAYER_REQUIRED_EXP[self.level-1]
+        self.reqired_exp = Player.required_exp[self.level-1]
     def move(self):
         #키 입력에 따른 플레이어 이동
         keys = pg.key.get_pressed()
@@ -91,7 +92,7 @@ class Player(pg.sprite.Sprite):
     def level_up(self):
         if self.level < self.max_level:
             self.level += 1
-            self.reqired_exp = PLAYER_REQUIRED_EXP[self.level-1]
+            self.reqired_exp = Player.required_exp[self.level-1]
 
 #인간
 class Human(Player):
@@ -132,6 +133,7 @@ class Wizard(Player):
 
 #적
 class Enemy(pg.sprite.Sprite):
+    damage_rate = 1
     def __init__(self,player):
         super().__init__()
         enemy_sprites.add(self)
@@ -156,6 +158,7 @@ class Enemy(pg.sprite.Sprite):
         self.first_attack = 0
         self.status = None
         self.exp = 0
+
     def attack(self):
         attackable_list = attackable_sprites.sprites()
         index = self.range_rect.collidelist(attackable_list)
@@ -166,12 +169,12 @@ class Enemy(pg.sprite.Sprite):
                 self.first_attack_counter += 1
                 if self.first_attack_counter >= self.first_attack_cooldown:
                     self.first_attack = 1
-                    target.hp -= self.attack_dmg
+                    target.hp -= self.attack_dmg * Enemy.damage_rate
             else:
                 self.attack_counter += 1
                 if self.attack_counter >= self.attack_cooldown:
                     self.attack_counter = 0
-                    target.hp -= self.attack_dmg
+                    target.hp -= self.attack_dmg * Enemy.damage_rate
 
         else:
             self.attack_counter = 0
@@ -263,9 +266,6 @@ class Building(pg.sprite.Sprite):
         self.price = None
         self.upgrade_price = None
         self.hp_bar_width = 100
-    def update(self):
-        if self.hp <= 0:
-            self.kill()
 
 
 #장벽
@@ -274,7 +274,8 @@ class Wall(Building):
     hp = [1000,1500]
     max_level = 2
     hp_bar_width = 100
-
+    self_healing = 0
+    heal_cooldown = 1*FPS
     def __init__(self,vector,player):
         super().__init__(player)
         wall_sprites.add(self)
@@ -292,7 +293,7 @@ class Wall(Building):
         self.rect.midbottom = self.vector
         self.hp_bar_width = Wall.hp_bar_width
         self.hp_bar = Hp_bar(self,Wall.hp_bar_width)
-
+        self.heal_counter = 0
     def upgrade(self):
         if self.level < self.max_level:
             self.level += 1
@@ -304,6 +305,20 @@ class Wall(Building):
             else:
                 self.upgrade_price = Wall.price[self.level]
 
+    def self_heal(self):
+        self.heal_counter += 1
+        if self.heal_counter >= Wall.heal_cooldown:
+            self.hp += self.max_hp * 0.05
+            if self.hp >= self.max_hp:
+                self.hp = self.max_hp
+            else:
+                pass #회복 이펙트
+            self.heal_counter = 0
+    def update(self):
+        if self.hp <= 0:
+            self.kill()
+        if Wall.self_healing:
+            self.self_heal()
 #대포
 class Canon(Building):
     price = [300,400,500]
@@ -313,6 +328,7 @@ class Canon(Building):
     first_attack_cooldown = 0.5 * FPS
     attack_cooldown = 1 * FPS
     attack_range = 800
+    damage_rate = 1
     enhanced_attack_chance = 0
     enhanced_attack_damage = 1.5
     hp_bar_width = 150
@@ -320,6 +336,7 @@ class Canon(Building):
         super().__init__(player)
         canon_sprites.add(self)
         self.level = 1
+        self.max_level = Canon.max_level
         self.max_hp = Canon.hp[self.level-1]
         self.hp = Canon.hp[self.level-1]
         self.attack_dmg = Canon.attack_dmg[self.level-1]
@@ -356,16 +373,16 @@ class Canon(Building):
                         self.image = CANON_IMAGE
                         self.outline_image = OUTLINE_CANON
                         if Canon.enhanced_attack_chance >= random():
-                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage,"right",self.vector)
+                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage*Canon.damage_rate,"right",self.vector)
                         else:
-                            CanonShot(self.attack_dmg,"right",self.vector)
+                            CanonShot(self.attack_dmg*Canon.damage_rate,"right",self.vector)
                     elif target.vector.x - self.vector.x < 0:
                         self.image = CANON_IMAGE_L
                         self.outline_image = OUTLINE_CANON_L
                         if Canon.enhanced_attack_chance >= random():
-                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage,"left",self.vector)
+                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage*Canon.damage_rate,"left",self.vector)
                         else:
-                            CanonShot(self.attack_dmg,"left",self.vector)
+                            CanonShot(self.attack_dmg*Canon.damage_rate,"left",self.vector)
             else:
                 self.attack_counter += 1
                 if self.attack_counter >= Canon.attack_cooldown:
@@ -374,16 +391,16 @@ class Canon(Building):
                         self.image = CANON_IMAGE
                         self.outline_image = OUTLINE_CANON
                         if Canon.enhanced_attack_chance >= random():
-                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage,"right",self.vector)
+                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage*Canon.damage_rate,"right",self.vector)
                         else:
-                            CanonShot(self.attack_dmg,"right",self.vector)
+                            CanonShot(self.attack_dmg*Canon.damage_rate,"right",self.vector)
                     elif target.vector.x - self.vector.x < 0:
                         self.image = CANON_IMAGE_L
                         self.outline_image = OUTLINE_CANON_L
                         if Canon.enhanced_attack_chance >= random():
-                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage,"left",self.vector)
+                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage*Canon.damage_rate,"left",self.vector)
                         else:
-                            CanonShot(self.attack_dmg,"left",self.vector)
+                            CanonShot(self.attack_dmg*Canon.damage_rate,"left",self.vector)
         else:
             self.first_attack_counter = 0
             self.attack_counter = 0
@@ -475,13 +492,15 @@ class Mine(Building):
     hp = [300,400,600]
     max_level = 3
     price = [150,250,400]
-    gold_output = [20,40,80]
+    gold_output = [20,30,40]
     gold_cooldown = 2 * FPS
+    gold_cooldown_rate = 1
     hp_bar_width = 150
     def __init__(self,vector,player):
         super().__init__(player)
         mine_sprites.add(self)
         self.level = 1
+        self.max_level = Mine.max_level
         self.max_hp = Mine.hp[self.level-1]
         self.hp = Mine.hp[self.level-1]
         self.image = MINE_IMAGE
@@ -490,6 +509,7 @@ class Mine(Building):
         self.shown_rect = self.rect.copy()
         self.vector = vector
         self.rect.midbottom = self.vector
+        self.gold_cooldown = Mine.gold_cooldown
         self.gold_output = Mine.gold_output[self.level-1]
         self.mining_counter = 0
         self.price = Mine.price[self.level-1]
@@ -498,7 +518,7 @@ class Mine(Building):
     
     def mining(self):
         self.mining_counter += 1
-        if self.mining_counter >= Mine.gold_cooldown:
+        if self.mining_counter >= self.gold_cooldown*Mine.gold_cooldown_rate:
             self.player.gold += self.gold_output
             self.player.total_gold += self.gold_output
             self.mining_counter = 0

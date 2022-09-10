@@ -64,10 +64,8 @@ GROUND_IMG = pg.transform.scale(pg.image.load("resources\\images\\ground.png").c
 HP_FRAME_IMG = pg.transform.scale(pg.image.load("resources\\images\\hp_bar_frame.png").convert_alpha(),(HP_FRAME_WIDTH,HP_FRAME_HEIGHT))
 MENU_FRAME = pg.image.load("resources\\images\\menu_frame.png").convert_alpha()
 BUTTON = pg.image.load("resources\\images\\button.png").convert_alpha()
-
-#PLAYER
-PLAYER_REQUIRED_EXP = [40,200,400,600,1000]
-
+UPGRADE_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\upgrade.png").convert_alpha(),(50,50))
+SELL_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\sell.png").convert_alpha(),(50,50))
 #HUMAN
 HUMAN_IMAGE = pg.image.load("resources\\images\\human.png").convert_alpha()
 
