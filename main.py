@@ -38,12 +38,6 @@ def enemy_spawn(game_sec,player):
         if random()*FPS <= 1:    #1초당 1마리
             sp.Zombie(choice(spawn_location),player)
 
-def get_ablity():
-    pass
-
-build_button = pg.Rect(WIDTH/2,HEIGHT/2, 200, 50)
-build_button.center = (WIDTH-100,HEIGHT-25)
-
 menu_frame_image = MENU_FRAME
 menu_frame = menu_frame_image.get_rect()
 menu_frame.center = (WIDTH/2,HEIGHT/2)
@@ -66,6 +60,10 @@ upgrade_image = UPGRADE_BUTTON
 upgrade_button = upgrade_image.get_rect()
 sell_image = SELL_BUTTON
 sell_button = sell_image.get_rect()
+
+build_image = BUILD_BUTTON
+build_button = build_image.get_rect()
+build_button.center = (WIDTH-100,HEIGHT-100)
 
 special_ability1 = pg.Rect(116.5,134,300,500)
 special_ability2 = pg.Rect(553,134,300,500)
@@ -213,8 +211,7 @@ def game(character):
         sp.all_sprites.update()
         
         #건물 설치 버튼
-        pg.draw.rect(SCREEN, (255, 0, 0), build_button)
-
+        SCREEN.blit(build_image,build_button)
         #버튼 클릭시 실행
         if build_button.collidepoint((mx, my)):
             if click:
@@ -310,9 +307,11 @@ def collision_check(rect,camera):
             return True
             
     return False
-    
-exit_button = pg.Rect(WIDTH - 50,20,30,30)
-cancel_button = pg.Rect(WIDTH - 70,100,50,50)
+
+exit_image = SELL_BUTTON
+exit_button = exit_image.get_rect()
+exit_button.center = (WIDTH-100,HEIGHT-100)
+
 wall_button = pg.Rect(100,HEIGHT - 250,100,200)
 wall_rect = WALL_IMAGE.get_rect()
 wall_green = fill(WALL_IMAGE,GREEN)
@@ -406,8 +405,6 @@ def build(camera,player):
             if exit_button.collidepoint((mx,my)):
                 if not selected:
                     running = 0
-            elif cancel_button.collidepoint((mx,my)):
-                selected = ""
             elif wall_button.collidepoint((mx, my)):
                 selected = "wall"
             elif canon_button.collidepoint((mx,my)):
@@ -417,9 +414,8 @@ def build(camera,player):
             
         else:
             selected = ""
-        
-        pg.draw.rect(SCREEN, (255,0,0),exit_button)
-        pg.draw.rect(SCREEN,(255,0,0),cancel_button)
+
+        SCREEN.blit(exit_image,exit_button)        
         pg.draw.rect(SCREEN, (255, 0, 0), wall_button)
         pg.draw.rect(SCREEN, (0, 255, 0), canon_button)
         pg.draw.rect(SCREEN, (0, 0, 255), mine_button)

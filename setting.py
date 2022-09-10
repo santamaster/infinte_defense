@@ -66,6 +66,7 @@ MENU_FRAME = pg.image.load("resources\\images\\menu_frame.png").convert_alpha()
 BUTTON = pg.image.load("resources\\images\\button.png").convert_alpha()
 UPGRADE_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\upgrade.png").convert_alpha(),(50,50))
 SELL_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\sell.png").convert_alpha(),(50,50))
+BUILD_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\build.png").convert_alpha(),(100,100))
 #HUMAN
 HUMAN_IMAGE = pg.image.load("resources\\images\\human.png").convert_alpha()
 
