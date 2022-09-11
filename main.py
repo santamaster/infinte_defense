@@ -47,6 +47,7 @@ button_image = BUTTON
 goto_main_menu = button_image.get_rect()
 goto_main_menu.center = (WIDTH/2,HEIGHT/2 + 150)
 
+go_back_text = MYFONT.render("돌아가기",True,BLACK)
 go_back = button_image.get_rect()
 go_back.center = (WIDTH/2,HEIGHT/2 - 50)
 
@@ -324,7 +325,10 @@ mine_button = pg.Rect(500,HEIGHT - 250,100,200)
 mine_rect = MINE_IMAGE.get_rect()
 mine_green = fill(MINE_IMAGE,GREEN)
 mine_red = fill(MINE_IMAGE,RED)
-
+mortar_button = pg.Rect(700,HEIGHT - 250,100,200)
+mortar_rect = MORTAR_IMAGE.get_rect()
+mortar_green = fill(MORTAR_IMAGE,GREEN)
+mortar_red = fill(MORTAR_IMAGE,RED)
 def build(camera,player):
     running = 1
     click = 0
@@ -401,6 +405,21 @@ def build(camera,player):
                         else:
                             sp.Message("You don't have enough money",RED)
 
+        elif selected == "mortar":
+            if not mortar_button.collidepoint((mx,my)):
+                mortar_rect.center = (mx,my)
+                if collision_check(mortar_rect,camera):
+                    SCREEN.blit(mortar_red,mortar_rect.topleft)
+                    if not click:
+                        sp.Message("You can't place building here",RED)
+                else:
+                    SCREEN.blit(mortar_green,mortar_rect.topleft)
+                    if not click:
+                        if player.gold >= sp.Mortar.price[0]:
+                            sp.Mortar(pg.math.Vector2(mx+camera.offset.x,516),player)
+                            player.gold -= sp.Mortar.price[0]
+                        else:
+                            sp.Message("You don't have enough money",RED)
         if click:
             if exit_button.collidepoint((mx,my)):
                 if not selected:
@@ -411,6 +430,8 @@ def build(camera,player):
                 selected = "canon"
             elif mine_button.collidepoint((mx,my)):
                 selected = "mine"
+            elif mortar_button.collidepoint((mx,my)):
+                selected = "mortar"
             
         else:
             selected = ""
@@ -419,6 +440,7 @@ def build(camera,player):
         pg.draw.rect(SCREEN, (255, 0, 0), wall_button)
         pg.draw.rect(SCREEN, (0, 255, 0), canon_button)
         pg.draw.rect(SCREEN, (0, 0, 255), mine_button)
+        pg.draw.rect(SCREEN, (255, 255, 255), mortar_button)
 
         #현재 골드 표시
         msg_gold = MYFONT.render("gold : {}".format(player.gold),True,WHITE)

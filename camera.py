@@ -4,7 +4,7 @@ import sprites as sp
 
 """카메라는 플레이어를 중심으로 움직이고 다른 스프라이트들을 그림."""
 
-class Camera():
+class Camera:
     def __init__(self,player):
         self.player = player #따라다녀야 할 플레이어
         self.offset = pg.math.Vector2(self.player.vector.x-WIDTH/2,0)

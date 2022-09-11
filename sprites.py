@@ -270,9 +270,9 @@ class Building(pg.sprite.Sprite):
 
 #장벽
 class Wall(Building):
-    price = [250,300]
-    hp = [1000,1500]
-    max_level = 2
+    price = [250,300,400]
+    hp = [1000,1500,2000]
+    max_level = 3
     hp_bar_width = 100
     self_healing = 0
     heal_cooldown = 1*FPS
@@ -463,15 +463,21 @@ class CanonShot(pg.sprite.Sprite):
 
 class Mortar(Building):
     attack_range = 1200
-    attack_cooldown = 1*FPS
-    price = 500
-    hp = 500
-    attack_dmg = 100
+    first_attack_cooldown = 3*FPS
+    attack_cooldown = 5*FPS
+    price = [500,600,700]
+    hp = [500,600,700]
+    attack_dmg = [100,150,200]
+    hp_bar_width = 150
+    max_level = 3
+    power = 30
     def __init__(self,vector,player):
         super().__init__(player)
-        self.max_hp = Mortar.hp
-        self.hp = Mortar.hp
-        self.damage = Mortar.attack_dmg
+        self.level = 1
+        self.max_level = Mortar.max_level
+        self.max_hp = Mortar.hp[self.level-1]
+        self.hp = Mortar.hp[self.level-1]
+        self.damage = Mortar.attack_dmg[self.level-1]
         self.vector = vector
         if self.vector.x >= BG_WIDTH/2:
             self.image = MORTAR_IMAGE
@@ -483,10 +489,97 @@ class Mortar(Building):
         self.shown_rect = self.rect.copy()
         self.rect.midbottom = self.vector
         self.attack_counter = 0
+        self.first_attack_counter = 0
+        self.first_attack = 0
+        self.price = Mortar.price[self.level-1]
+        self.upgrade_price = Mortar.price[self.level]
+        self.hp_bar = Hp_bar(self,Mortar.hp_bar_width)
+
     def attack(self):
-        pass
+        #사거리 안에 있는 적
+        enemy_in_range = [ sprite for sprite in enemy_sprites.sprites() \
+                if abs(sprite.vector.x - self.vector.x) <= Mortar.attack_range]
+
+        if enemy_in_range:
+            #사거리 안에 있는 적들 중 가장 가까운 적
+            target = sorted(enemy_in_range,key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
+            if not self.first_attack:
+                self.first_attack_counter +=1
+                if self.first_attack_counter >= Mortar.first_attack_cooldown:
+                    self.first_attack = 1
+                    MortarShot(Mortar.attack_dmg,self.vector,target.vector,Mortar.power)
+                    if target.vector.x - self.vector.x >= 0:
+                        self.image = CANON_IMAGE
+                        self.outline_image = OUTLINE_CANON
+                    elif target.vector.x - self.vector.x < 0:
+                        self.image = CANON_IMAGE_L
+                        self.outline_image = OUTLINE_CANON_L
+            else:
+                self.attack_counter += 1
+                if self.attack_counter >= Mortar.attack_cooldown:
+                    self.attack_counter = 0
+                    MortarShot(Mortar.attack_dmg,self.vector,target.vector,Mortar.power)
+
+                    if target.vector.x - self.vector.x >= 0:
+                        self.image = CANON_IMAGE
+                        self.outline_image = OUTLINE_CANON
+                    elif target.vector.x - self.vector.x < 0:
+                        self.image = CANON_IMAGE_L
+                        self.outline_image = OUTLINE_CANON_L
+        else:
+            self.first_attack_counter = 0
+            self.attack_counter = 0
+            self.first_attack = 0
+    
+    def upgrade(self):
+        if self.level < Mortar.max_level:
+            self.level += 1
+            self.max_hp = Mortar.hp[self.level-1]
+            self.hp = Mortar.hp[self.level-1]
+            self.price = Mortar.price[self.level-1]
+            self.attack_dmg = Mortar.attack_dmg[self.level-1]
+            if self.level == Mortar.max_level:
+                self.upgrade_price = None
+            else:
+                self.upgrade_price = Mortar.price[self.level]
     def update(self):
-        pass
+        self.attack()
+        if self.hp <= 0:
+            self.kill()
+
+class MortarShot(pg.sprite.Sprite):
+    time = 1 * FPS #end_point 까지 도달 시간
+    def __init__(self,damage,start_point,end_point,power):
+        super().__init__()
+        all_sprites.add(self)
+        noncreature_sprites.add(self)
+        self.vector = pg.math.Vector2(start_point)
+        self.start_point = pg.math.Vector2(start_point)
+        self.end_point = pg.math.Vector2(end_point)
+        self.attack_dmg = damage        
+        self.image = CANONSHOT_IMAGE
+        self.rect = self.image.get_rect()
+        self.rect.midbottom = self.vector
+        self.shown_rect = self.rect.copy()
+        self.power = power   
+        self.delta_x = (self.end_point.x - self.start_point.x) / MortarShot.time
+        self.delta_y = MortarShot.time/2*GRAVITY
+    def attack(self):
+        if self.vector.y > self.start_point.y:
+            collided_sprite = pg.sprite.spritecollide(self,enemy_sprites,False)
+            if collided_sprite:
+                for sprite in collided_sprite:
+                    sprite.hp -= self.attack_dmg
+            self.kill()
+    def move(self):
+        self.vector.x += self.delta_x
+        self.vector.y -= self.delta_y
+        self.delta_y -= GRAVITY
+        self.rect.midbottom = self.vector
+
+    def update(self):
+        self.move()
+        self.attack()
 
 class Mine(Building):
     hp = [300,400,600]
@@ -561,7 +654,7 @@ class Hp_bar(pg.sprite.Sprite):
         self.rect.width = self.width * self.hp / self.max_hp
         self.vector = pg.math.Vector2(self.sprite.rect.centerx-self.width*(1-self.hp/self.max_hp)/2,self.sprite.rect.top-self.interval)
         self.rect.center = self.vector
-
+        #스프라이트가 죽으면 삭제
         if not self.sprite.alive():
             self.kill()
 
@@ -623,3 +716,4 @@ class Message(pg.sprite.Sprite):
         self.counter += 1
         if self.counter >= self.cooldown:
             self.kill()
+
