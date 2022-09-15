@@ -38,6 +38,24 @@ def enemy_spawn(game_sec,player):
         if random()*FPS <= 1:    #1초당 1마리
             sp.Zombie(choice(spawn_location),player)
 
+#자동으로 줄바꿈 및 화면 출력
+def blit_text(rect, text, pos, color=WHITE):
+    words = [word.split(' ') for word in text.splitlines()] 
+    space = MYFONT.size(' ')[0]  
+    max_width, max_height = rect.w,rect.h
+    x, y = pos
+    for line in words:
+        for word in line:
+            word_surface = MYFONT.render(word, 0, color)
+            word_width, word_height = word_surface.get_size()
+            if x + word_width >= max_width:
+                x = pos[0]  
+                y += word_height  
+            SCREEN.blit(word_surface, (x+rect.x, y+rect.y))
+            x += word_width + space
+        x = pos[0]  
+        y += word_height  
+
 menu_frame_image = MENU_FRAME
 menu_frame = menu_frame_image.get_rect()
 menu_frame.center = (WIDTH/2,HEIGHT/2)
@@ -66,9 +84,16 @@ build_image = BUILD_BUTTON
 build_button = build_image.get_rect()
 build_button.center = (WIDTH-100,HEIGHT-100)
 
-special_ability1 = pg.Rect(116.5,134,300,500)
-special_ability2 = pg.Rect(553,134,300,500)
-special_ability3 = pg.Rect(949.5,134,300,500)
+ability_image = MENU_FRAME
+
+ability1 = ability_image.get_rect()
+ability1.center = (WIDTH/4*1,HEIGHT/2)
+
+ability2 = ability_image.get_rect()
+ability2.center = (WIDTH/4*2,HEIGHT/2)
+
+ability3 = ability_image.get_rect()
+ability3.center = (WIDTH/4*3,HEIGHT/2)
 
 #게임
 def game(character):
@@ -131,20 +156,25 @@ def game(character):
         
         if select_ability:
             if click:
-                if special_ability1.collidepoint((mx,my)):
+                if ability1.collidepoint((mx,my)):
                     ability123_list[0]()
                     select_ability = 0
-                elif special_ability2.collidepoint((mx,my)):
+                elif ability2.collidepoint((mx,my)):
                     ability123_list[1]()
                     select_ability = 0
-                elif special_ability3.collidepoint((mx,my)):
+                elif ability3.collidepoint((mx,my)):
                     ability123_list[2]()
                     select_ability = 0
             camera.darkened_draw()
 
-            pg.draw.rect(SCREEN,RED,special_ability1)
-            pg.draw.rect(SCREEN,RED,special_ability2)
-            pg.draw.rect(SCREEN,RED,special_ability3)
+            SCREEN.blit(ability_image,ability1)
+            blit_text(ability1,ab.ability_info[ability123_list[0]],(0,0))
+
+            SCREEN.blit(ability_image,ability2)
+            blit_text(ability2,ab.ability_info[ability123_list[1]],(0,0))
+
+            SCREEN.blit(ability_image,ability3)
+            blit_text(ability3,ab.ability_info[ability123_list[2]],(0,0))
 
             pg.display.flip()
             continue
@@ -245,17 +275,17 @@ def game(character):
             if upgrade_button.collidepoint((mx,my)):
                 if click:
                     if selected_sprite.level == selected_sprite.max_level:
-                        sp.Message("Already max level",RED)
+                        sp.Message("이미 최대 레벨입니다.",RED)
                         upgrade_sell = 0
                         selected_sprite = None
                     elif player.gold >= selected_sprite.upgrade_price:
                         player.gold -= selected_sprite.upgrade_price
                         selected_sprite.upgrade()
-                        sp.Message(f"upgrade to level {selected_sprite.level}",WHITE)
+                        sp.Message(f" {selected_sprite.level} 레벨로 업그레이드",WHITE)
                         upgrade_sell = 0
                         selected_sprite = None
                     elif player.gold <= selected_sprite.upgrade_price:
-                        sp.Message("You don't have enough money",RED)
+                        sp.Message("골드가 부족합니다.",RED)
                         upgrade_sell = 0
                         selected_sprite = None
             elif sell_button.collidepoint((mx,my)):
@@ -363,7 +393,7 @@ def build(camera,player):
                 if collision_check(wall_rect,camera):
                     SCREEN.blit(wall_red,wall_rect.topleft)
                     if not click:
-                        sp.Message("You can't place building here",RED)
+                        sp.Message("여기에 건물을 설치할 수 없습니다.",RED)
                 else:
                     SCREEN.blit(wall_green,wall_rect.topleft)
                     if not click:
@@ -371,7 +401,7 @@ def build(camera,player):
                             sp.Wall(pg.math.Vector2(mx+camera.offset.x,516),player)
                             player.gold -= sp.Wall.price[0]
                         else:
-                            sp.Message("You don't have enough money",RED)
+                            sp.Message("골드가 충분하지 않습니다.",RED)
 
         elif selected == "canon":
             if not canon_button.collidepoint((mx,my)):
@@ -379,7 +409,7 @@ def build(camera,player):
                 if collision_check(canon_rect,camera):
                     SCREEN.blit(canon_red,canon_rect.topleft)
                     if not click:
-                        sp.Message("You can't place building here",RED)
+                        sp.Message("여기에 건물을 설치할 수 없습니다.",RED)
                 else:
                     SCREEN.blit(canon_green,canon_rect.topleft)
                     if not click:
@@ -387,7 +417,7 @@ def build(camera,player):
                             sp.Canon(pg.math.Vector2(mx+camera.offset.x,516),player)
                             player.gold -= sp.Canon.price[0]
                         else:
-                            sp.Message("You don't have enough money",RED)
+                            sp.Message("골드가 충분하지 않습니다.",RED)
 
         elif selected == "mine":
             if not mine_button.collidepoint((mx,my)):
@@ -395,7 +425,7 @@ def build(camera,player):
                 if collision_check(mine_rect,camera):
                     SCREEN.blit(mine_red,mine_rect.topleft)
                     if not click:
-                        sp.Message("You can't place building here",RED)
+                        sp.Message("여기에 건물을 설치할 수 없습니다.",RED)
                 else:
                     SCREEN.blit(mine_green,mine_rect.topleft)
                     if not click:
@@ -403,7 +433,7 @@ def build(camera,player):
                             sp.Mine(pg.math.Vector2(mx+camera.offset.x,516),player)
                             player.gold -= sp.Mine.price[0]
                         else:
-                            sp.Message("You don't have enough money",RED)
+                            sp.Message("골드가 충분하지 않습니다.",RED)
 
         elif selected == "mortar":
             if not mortar_button.collidepoint((mx,my)):
@@ -411,7 +441,7 @@ def build(camera,player):
                 if collision_check(mortar_rect,camera):
                     SCREEN.blit(mortar_red,mortar_rect.topleft)
                     if not click:
-                        sp.Message("You can't place building here",RED)
+                        sp.Message("여기에 건물을 설치할 수 없습니다.",RED)
                 else:
                     SCREEN.blit(mortar_green,mortar_rect.topleft)
                     if not click:
@@ -419,7 +449,7 @@ def build(camera,player):
                             sp.Mortar(pg.math.Vector2(mx+camera.offset.x,516),player)
                             player.gold -= sp.Mortar.price[0]
                         else:
-                            sp.Message("You don't have enough money",RED)
+                            sp.Message("골드가 충분하지 않습니다.",RED)
         if click:
             if exit_button.collidepoint((mx,my)):
                 if not selected:
@@ -443,7 +473,7 @@ def build(camera,player):
         pg.draw.rect(SCREEN, (255, 255, 255), mortar_button)
 
         #현재 골드 표시
-        msg_gold = MYFONT.render("gold : {}".format(player.gold),True,WHITE)
+        msg_gold = MYFONT.render("골드 : {}".format(player.gold),True,WHITE)
         SCREEN.blit(msg_gold,(10,10))
 
         pg.display.flip()

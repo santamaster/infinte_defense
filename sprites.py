@@ -2,6 +2,7 @@ import pygame as pg
 from pygame.locals import *
 from setting import *
 from random import random
+import math
 #스프라이트 그룹
 all_sprites = pg.sprite.Group()         #모든 스프라이트 그룹
 player_sprites = pg.sprite.Group()      #플레이어 스프라이트 그룹
@@ -308,7 +309,7 @@ class Wall(Building):
     def self_heal(self):
         self.heal_counter += 1
         if self.heal_counter >= Wall.heal_cooldown:
-            self.hp += self.max_hp * 0.05
+            self.hp += self.max_hp * 0.01
             if self.hp >= self.max_hp:
                 self.hp = self.max_hp
             else:
@@ -330,7 +331,7 @@ class Canon(Building):
     attack_range = 800
     damage_rate = 1
     enhanced_attack_chance = 0
-    enhanced_attack_damage = 1.5
+    enhanced_attack_damage = 2
     hp_bar_width = 150
     def __init__(self,vector,player):
         super().__init__(player)
@@ -471,13 +472,15 @@ class Mortar(Building):
     hp_bar_width = 150
     max_level = 3
     power = 30
+    lavashot = 0
+    damage_rate = 1
     def __init__(self,vector,player):
         super().__init__(player)
         self.level = 1
         self.max_level = Mortar.max_level
         self.max_hp = Mortar.hp[self.level-1]
         self.hp = Mortar.hp[self.level-1]
-        self.damage = Mortar.attack_dmg[self.level-1]
+        self.attack_dmg = Mortar.attack_dmg[self.level-1]
         self.vector = vector
         if self.vector.x >= BG_WIDTH/2:
             self.image = MORTAR_IMAGE
@@ -507,25 +510,24 @@ class Mortar(Building):
                 self.first_attack_counter +=1
                 if self.first_attack_counter >= Mortar.first_attack_cooldown:
                     self.first_attack = 1
-                    MortarShot(Mortar.attack_dmg,self.vector,target.vector,Mortar.power)
+                    MortarShot(self.attack_dmg*Mortar.damage_rate,self.vector,target.vector,Mortar.power,Mortar.lavashot)
                     if target.vector.x - self.vector.x >= 0:
-                        self.image = CANON_IMAGE
-                        self.outline_image = OUTLINE_CANON
+                        self.image = MORTAR_IMAGE
+                        self.outline_image = OUTLINE_MORTAR
                     elif target.vector.x - self.vector.x < 0:
-                        self.image = CANON_IMAGE_L
-                        self.outline_image = OUTLINE_CANON_L
+                        self.image = MORTAR_IMAGE_L
+                        self.outline_image = OUTLINE_MORTAR_L
             else:
                 self.attack_counter += 1
                 if self.attack_counter >= Mortar.attack_cooldown:
                     self.attack_counter = 0
-                    MortarShot(Mortar.attack_dmg,self.vector,target.vector,Mortar.power)
-
+                    MortarShot(self.attack_dmg*Mortar.damage_rate,self.vector,target.vector,Mortar.power,Mortar.lavashot)
                     if target.vector.x - self.vector.x >= 0:
-                        self.image = CANON_IMAGE
-                        self.outline_image = OUTLINE_CANON
+                        self.image = MORTAR_IMAGE
+                        self.outline_image = OUTLINE_MORTAR
                     elif target.vector.x - self.vector.x < 0:
-                        self.image = CANON_IMAGE_L
-                        self.outline_image = OUTLINE_CANON_L
+                        self.image = MORTAR_IMAGE_L
+                        self.outline_image = OUTLINE_MORTAR_L
         else:
             self.first_attack_counter = 0
             self.attack_counter = 0
@@ -548,8 +550,8 @@ class Mortar(Building):
             self.kill()
 
 class MortarShot(pg.sprite.Sprite):
-    time = 1 * FPS #end_point 까지 도달 시간
-    def __init__(self,damage,start_point,end_point,power):
+    time = 1*FPS
+    def __init__(self,damage,start_point,end_point,power,lavashot):
         super().__init__()
         all_sprites.add(self)
         noncreature_sprites.add(self)
@@ -561,25 +563,37 @@ class MortarShot(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midbottom = self.vector
         self.shown_rect = self.rect.copy()
-        self.power = power   
-        self.delta_x = (self.end_point.x - self.start_point.x) / MortarShot.time
-        self.delta_y = MortarShot.time/2*GRAVITY
+        self.power = power
+        self.delta_x = (self.end_point.x-self.start_point.x)/MortarShot.time
+        self.delta_y = self.power
+        self.delta_square_y = self.power/(MortarShot.time/2)
+        self.lavashot = lavashot
     def attack(self):
         if self.vector.y > self.start_point.y:
             collided_sprite = pg.sprite.spritecollide(self,enemy_sprites,False)
             if collided_sprite:
                 for sprite in collided_sprite:
                     sprite.hp -= self.attack_dmg
+            if self.lavashot:
+                FireZone()
             self.kill()
     def move(self):
         self.vector.x += self.delta_x
         self.vector.y -= self.delta_y
-        self.delta_y -= GRAVITY
+        self.delta_y -=self.delta_square_y
         self.rect.midbottom = self.vector
 
     def update(self):
         self.move()
         self.attack()
+
+#TODO
+#화염 지대
+class FireZone(pg.sprite.Sprite):
+    def __init__(self,duration):
+        super().__init__()
+        self.duration = duration
+        
 
 class Mine(Building):
     hp = [300,400,600]
@@ -695,7 +709,7 @@ class Earn_gold_effect(Effect):
         self.image = self.images[int(self.image_counter)]
 
 class Message(pg.sprite.Sprite):
-    def __init__(self,message,color):
+    def __init__(self,message,color=WHITE):
         super().__init__()
         #메세지는 항상 1개만 출력
         if len(message_sprites) >= 1:

@@ -91,8 +91,8 @@ OUTLINE_CANON_L = get_outline(CANON_IMAGE_L)
 CANONSHOT_IMAGE = pg.image.load("resources\\images\\canonshot.png").convert_alpha()
 
 #MORTAR
-MORTAR_IMAGE_SIZE = (150,100)
-MORTAR_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\canon.png").convert_alpha(),MORTAR_IMAGE_SIZE)
+MORTAR_IMAGE_SIZE = (100,150)
+MORTAR_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mortar.png").convert_alpha(),MORTAR_IMAGE_SIZE)
 MORTAR_IMAGE_L = pg.transform.flip(MORTAR_IMAGE,True,False)
 OUTLINE_MORTAR = get_outline(MORTAR_IMAGE)
 OUTLINE_MORTAR_L = get_outline(MORTAR_IMAGE_L)
