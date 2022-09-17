@@ -26,7 +26,7 @@ class Player(pg.sprite.Sprite):
     max_level = 6
     hp = 1000
     vel = 10
-    required_exp = [40,40,400,600,1000]
+    required_exp = [20,40,400,600,1000]
     def __init__(self):
         super().__init__()
         all_sprites.add(self)

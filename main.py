@@ -38,23 +38,30 @@ def enemy_spawn(game_sec,player):
         if random()*FPS <= 1:    #1초당 1마리
             sp.Zombie(choice(spawn_location),player)
 
-#자동으로 줄바꿈 및 화면 출력
-def blit_text(rect, text, pos, color=WHITE):
-    words = [word.split(' ') for word in text.splitlines()] 
-    space = MYFONT.size(' ')[0]  
-    max_width, max_height = rect.w,rect.h
-    x, y = pos
-    for line in words:
-        for word in line:
-            word_surface = MYFONT.render(word, 0, color)
-            word_width, word_height = word_surface.get_size()
-            if x + word_width >= max_width:
-                x = pos[0]  
-                y += word_height  
-            SCREEN.blit(word_surface, (x+rect.x, y+rect.y))
-            x += word_width + space
-        x = pos[0]  
-        y += word_height  
+#자동으로 줄바꿈 및 화면 출력(가운데 정렬)
+def blit_text(rect, text, pos, color=BLACK):
+    words = sum([word.split(' ') for word in text.splitlines()],[])
+    space,height = MYFONT.size(' ')
+    lines = []
+    max_width = rect.w
+    centerx = rect.centerx
+    centery =rect.centery
+    x = 0
+    y = pos
+    for i,word in enumerate(words):
+        size = MYFONT.size(word)[0]
+        if x + size >= max_width:
+            lines.append(' '.join(words[:i]))
+            x = 0
+            k = i
+        x += size + space
+    lines.append(' '.join(words[k:]))
+    for line in lines:
+        line_surface = MYFONT.render(line, 0, color)
+        line_rect = line_surface.get_rect(center=(centerx,centery+y))
+        SCREEN.blit(line_surface,line_rect)
+        y += height
+
 
 menu_frame_image = MENU_FRAME
 menu_frame = menu_frame_image.get_rect()
@@ -168,13 +175,13 @@ def game(character):
             camera.darkened_draw()
 
             SCREEN.blit(ability_image,ability1)
-            blit_text(ability1,ab.ability_info[ability123_list[0]],(0,0))
+            blit_text(ability1,ab.ability_info[ability123_list[0]],0)
 
             SCREEN.blit(ability_image,ability2)
-            blit_text(ability2,ab.ability_info[ability123_list[1]],(0,0))
+            blit_text(ability2,ab.ability_info[ability123_list[1]],0)
 
             SCREEN.blit(ability_image,ability3)
-            blit_text(ability3,ab.ability_info[ability123_list[2]],(0,0))
+            blit_text(ability3,ab.ability_info[ability123_list[2]],0)
 
             pg.display.flip()
             continue

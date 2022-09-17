@@ -22,7 +22,7 @@ class Camera:
         elif self.offset.x >= BG_WIDTH-WIDTH:
             self.offset.x = BG_WIDTH-WIDTH
 
-    def draw(self,show_hp=1,show_effect=1,show_message=1,show_fps=1):
+    def draw(self,show_hp=1,show_effect=1,show_message=1):
         #배경과 모든 스프라이트를 반대방향으로 이동시킨뒤 화면 출력
         #배경 화면 출력
         SCREEN.blit(BACKGROUND_IMG,(-self.offset.x,-self.offset.y))
