@@ -13,11 +13,19 @@ def reset():
         sprite.kill()
     for sprite in sp.hp_bar_sprites:
         sprite.kill()
-    sp.Canon.self_healing = 0
+    sp.Wall.self_healing = 0
     sp.Mine.gold_cooldown_rate = 1
     sp.Canon.enhanced_attack_chance = 0
     sp.Canon.damage_rate = 1
+    sp.Canon.attack_range = 800
+    sp.Canon.double_barrel = 0
+    sp.Mortar.lavashot = 0
+    sp.Mortar.damage_rate = 1
+    sp.MortarShot.time = 1*FPS
     sp.Enemy.damage_rate = 1
+    sp.Enemy.get_gold = 0
+    sp.Enemy.damaged_by_wall = 0
+
 
 
 #적 생성 시스템
@@ -45,20 +53,22 @@ def blit_text(rect, text, pos, color=BLACK):
     lines = []
     max_width = rect.w
     centerx = rect.centerx
-    centery =rect.centery
+    recty = rect.top
     x = 0
     y = pos
+    
+    k = 0
     for i,word in enumerate(words):
         size = MYFONT.size(word)[0]
         if x + size >= max_width:
-            lines.append(' '.join(words[:i]))
+            lines.append(' '.join(words[k:i]))
             x = 0
             k = i
         x += size + space
     lines.append(' '.join(words[k:]))
     for line in lines:
         line_surface = MYFONT.render(line, 0, color)
-        line_rect = line_surface.get_rect(center=(centerx,centery+y))
+        line_rect = line_surface.get_rect(center=(centerx,recty + y))
         SCREEN.blit(line_surface,line_rect)
         y += height
 
@@ -69,15 +79,17 @@ menu_frame.center = (WIDTH/2,HEIGHT/2)
 
 button_image = BUTTON
 
-goto_main_menu = button_image.get_rect()
-goto_main_menu.center = (WIDTH/2,HEIGHT/2 + 150)
+goto_main_menu_image = GOTO_MAIN_MENU_BUTTON
+goto_main_menu = goto_main_menu_image.get_rect()
+goto_main_menu.center = (WIDTH/2+70,HEIGHT/2 + 200)
 
 go_back_text = MYFONT.render("돌아가기",True,BLACK)
 go_back = button_image.get_rect()
 go_back.center = (WIDTH/2,HEIGHT/2 - 50)
 
-restart = button_image.get_rect()
-restart.center = (WIDTH/2,HEIGHT/2 + 50)
+replay_image = REPLAY_BUTTON
+replay = replay_image.get_rect()
+replay.center = (WIDTH/2-70,HEIGHT/2 + 200)
 
 goto_mainmenu_defeat = button_image.get_rect()
 goto_mainmenu_defeat.center = (WIDTH/2,HEIGHT/2)
@@ -91,23 +103,27 @@ build_image = BUILD_BUTTON
 build_button = build_image.get_rect()
 build_button.center = (WIDTH-100,HEIGHT-100)
 
-ability_image = MENU_FRAME
+ability_frame = ABILITY_FRAME
+outline_ability_frame = OUTLINE_ABILITY_FRAME
 
-ability1 = ability_image.get_rect()
+ability1 = ability_frame.get_rect()
 ability1.center = (WIDTH/4*1,HEIGHT/2)
 
-ability2 = ability_image.get_rect()
+ability2 = ability_frame.get_rect()
 ability2.center = (WIDTH/4*2,HEIGHT/2)
 
-ability3 = ability_image.get_rect()
+ability3 = ability_frame.get_rect()
 ability3.center = (WIDTH/4*3,HEIGHT/2)
 
+coin_image = COIN_IMAGE
+coin_rect = coin_image.get_rect()
+
+hp_frame_image = HP_FRAME_IMAGE
+hp_frame = hp_frame_image.get_rect(topright=(WIDTH - HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))
 #게임
-def game(character):
-    if character == "human":
-        player = sp.Human()
-    elif character == "wizard":
-        player = sp.Wizard()
+def game():
+    player = sp.Player()
+
     running = 1
     click = 0
     game_tick = 0
@@ -119,7 +135,6 @@ def game(character):
     player_level = 1
     ability_list = []
     while running:
-        game_tick += 1
         game_sec = game_tick//FPS
         click = 0
 
@@ -161,28 +176,41 @@ def game(character):
             select_ability = 1
             sp.Message("level_up!",GREEN)
         
+
+
         if select_ability:
-            if click:
-                if ability1.collidepoint((mx,my)):
-                    ability123_list[0]()
-                    select_ability = 0
-                elif ability2.collidepoint((mx,my)):
-                    ability123_list[1]()
-                    select_ability = 0
-                elif ability3.collidepoint((mx,my)):
-                    ability123_list[2]()
-                    select_ability = 0
+
             camera.darkened_draw()
+            SCREEN.blit(ability_frame,ability1)
+            blit_text(ability1,ab.ability_info[ability123_list[0]][0],ability1.height/4)
+            blit_text(ability1,ab.ability_info[ability123_list[0]][1],ability1.height/2)
 
-            SCREEN.blit(ability_image,ability1)
-            blit_text(ability1,ab.ability_info[ability123_list[0]],0)
+            SCREEN.blit(ability_frame,ability2)
+            blit_text(ability2,ab.ability_info[ability123_list[1]][0],ability2.height/4)
+            blit_text(ability2,ab.ability_info[ability123_list[1]][1],ability2.height/2)
 
-            SCREEN.blit(ability_image,ability2)
-            blit_text(ability2,ab.ability_info[ability123_list[1]],0)
-
-            SCREEN.blit(ability_image,ability3)
-            blit_text(ability3,ab.ability_info[ability123_list[2]],0)
-
+            SCREEN.blit(ability_frame,ability3)
+            blit_text(ability3,ab.ability_info[ability123_list[2]][0],ability3.height/4)
+            blit_text(ability3,ab.ability_info[ability123_list[2]][1],ability3.height/2)
+            if ability1.collidepoint((mx,my)):
+                if click:
+                    ability123_list[0]()
+                    ability_list.append(ability123_list[0])
+                    select_ability = 0
+                SCREEN.blit(outline_ability_frame,ability1)
+            elif ability2.collidepoint((mx,my)):
+                if click:
+                    ability123_list[1]()
+                    ability_list.append(ability123_list[1])
+                    select_ability = 0                
+                SCREEN.blit(outline_ability_frame,ability2)
+                
+            elif ability3.collidepoint((mx,my)):
+                if click:
+                    ability123_list[2]()
+                    ability_list.append(ability123_list[2])
+                    select_ability = 0
+                SCREEN.blit(outline_ability_frame,ability3)
             pg.display.flip()
             continue
 
@@ -197,26 +225,22 @@ def game(character):
                 elif goto_main_menu.collidepoint((mx,my)):
                     reset()
                     break
-                elif restart.collidepoint((mx,my)):
+                elif replay.collidepoint((mx,my)):
                     reset()
-                    if character == "human":
-                        player = sp.Human()
-                    elif character == "wizard":
-                        player = sp.Wizard()
+                    player = sp.Player()
                     game_tick = 0
                     menu = 0
                     camera = c.Camera(player)
                     upgrade_sell = 0
                     selected_sprite = None
                     player_level = 1
-
                     continue
             
             #메뉴 그리기
             SCREEN.blit(menu_frame_image,menu_frame)
-            SCREEN.blit(button_image,goto_main_menu)
+            SCREEN.blit(goto_main_menu_image,goto_main_menu)
             SCREEN.blit(button_image,go_back)
-            SCREEN.blit(button_image,restart)
+            SCREEN.blit(replay_image,replay)
             
             pg.display.flip()
             continue
@@ -247,7 +271,8 @@ def game(character):
 
         #스프라이트 업데이트
         sp.all_sprites.update()
-        
+        game_tick += 1
+
         #건물 설치 버튼
         SCREEN.blit(build_image,build_button)
         #버튼 클릭시 실행
@@ -267,11 +292,23 @@ def game(character):
         #건물 업데이트 및 판매
         if upgrade_sell:
             upgrade_button.midbottom = selected_sprite.shown_rect.bottomright
-            upgrade_button.move_ip(0,100)
+            upgrade_button.move_ip(0,60)
             SCREEN.blit(upgrade_image,upgrade_button)
+            if player.gold >= selected_sprite.upgrade_price:
+                msg_upgrade_price = MYFONT.render(str(-selected_sprite.upgrade_price),True,WHITE)
+            else:
+                msg_upgrade_price = MYFONT.render(str(-selected_sprite.upgrade_price),True,RED)
+            msg_upgrade_price_rect = msg_upgrade_price.get_rect(midbottom=selected_sprite.shown_rect.bottomright)
+            msg_upgrade_price_rect.move_ip(0,90)
+            SCREEN.blit(msg_upgrade_price,msg_upgrade_price_rect)
+            
             sell_button.midbottom = selected_sprite.shown_rect.bottomleft
-            sell_button.move_ip(0,100)
+            sell_button.move_ip(0,60)
             SCREEN.blit(sell_image,sell_button)
+            msg_sell_price = MYFONT.render(f"+{int(selected_sprite.price * REFUND_RATE)}",True,WHITE)
+            msg_sell_price_rect = msg_sell_price.get_rect(midbottom=selected_sprite.shown_rect.bottomleft)
+            msg_sell_price_rect.move_ip(0,90)
+            SCREEN.blit(msg_sell_price,msg_sell_price_rect)
             
             msg_sprite_level = MYFONT.render(f"{selected_sprite.level} level",True,WHITE)
             sprite_level_rect = msg_sprite_level.get_rect()
@@ -308,16 +345,22 @@ def game(character):
                 selected_sprite = None
         
         #플레이어 hp표시
-        SCREEN.blit(HP_FRAME_IMG,(WIDTH - HP_FRAME_WIDTH - HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))#체력바 프레임
-        pg.draw.rect(SCREEN,RED,[WIDTH - HP_FRAME_INTERVAL - HP_FRAME_WIDTH*49/50,HP_FRAME_INTERVAL + HP_FRAME_HEIGHT/10, \
-            player.hp / player.max_hp * HP_FRAME_WIDTH*24/25,HP_FRAME_HEIGHT*4/5])
+        SCREEN.blit(hp_frame_image,hp_frame)#체력바 프레임
+        pg.draw.rect(SCREEN,RED,(WIDTH - HP_FRAME_INTERVAL - HP_FRAME_WIDTH*49/50,HP_FRAME_INTERVAL + HP_FRAME_HEIGHT/10, \
+            player.hp / player.max_hp * HP_FRAME_WIDTH*24/25,HP_FRAME_HEIGHT*4/5))
+
+        if hp_frame.collidepoint((mx,my)):
+            msg_hp = MYFONT.render(f"{player.hp} / {player.max_hp}",True,WHITE)
+            SCREEN.blit(msg_hp,(WIDTH - HP_FRAME_INTERVAL - HP_FRAME_WIDTH*49/50,HP_FRAME_INTERVAL + HP_FRAME_HEIGHT/10, \
+                HP_FRAME_WIDTH*24/25,HP_FRAME_HEIGHT*4/5))
+
 
         #현재 골드 표시
         msg_gold = MYFONT.render(f"골드 : {player.gold}",True,WHITE)
         SCREEN.blit(msg_gold,(10,10))
 
         #시간 표시
-        msg_time = MYFONT.render(f"{game_sec//60}분 {game_sec%60}초",True,WHITE)
+        msg_time = MYFONT.render(f"{game_sec//60}분 {game_sec}초",True,WHITE)
         SCREEN.blit(msg_time,(10,50))
         
         #플레이어 레벨 표시
@@ -350,22 +393,30 @@ exit_image = SELL_BUTTON
 exit_button = exit_image.get_rect()
 exit_button.center = (WIDTH-100,HEIGHT-100)
 
-wall_button = pg.Rect(100,HEIGHT - 250,100,200)
+building_frame = BUILDING_FRAME
+outline_building_frame = OUTLINE_BUILDING_FRAME
+
+wall_button = building_frame.get_rect(center=(125,HEIGHT-150))
 wall_rect = WALL_IMAGE.get_rect()
 wall_green = fill(WALL_IMAGE,GREEN)
 wall_red = fill(WALL_IMAGE,RED)
-canon_button = pg.Rect(300,HEIGHT - 250,100,200)
+
+
+canon_button = building_frame.get_rect(center=(325,HEIGHT-150))
 canon_rect = CANON_IMAGE.get_rect()
 canon_green = fill(CANON_IMAGE,GREEN)
 canon_red = fill(CANON_IMAGE,RED)
-mine_button = pg.Rect(500,HEIGHT - 250,100,200)
+
+mine_button = building_frame.get_rect(center=(525,HEIGHT-150))
 mine_rect = MINE_IMAGE.get_rect()
 mine_green = fill(MINE_IMAGE,GREEN)
 mine_red = fill(MINE_IMAGE,RED)
-mortar_button = pg.Rect(700,HEIGHT - 250,100,200)
+
+mortar_button = building_frame.get_rect(center=(725,HEIGHT-150))
 mortar_rect = MORTAR_IMAGE.get_rect()
 mortar_green = fill(MORTAR_IMAGE,GREEN)
 mortar_red = fill(MORTAR_IMAGE,RED)
+
 def build(camera,player):
     running = 1
     click = 0
@@ -474,11 +525,33 @@ def build(camera,player):
             selected = ""
 
         SCREEN.blit(exit_image,exit_button)        
-        pg.draw.rect(SCREEN, (255, 0, 0), wall_button)
-        pg.draw.rect(SCREEN, (0, 255, 0), canon_button)
-        pg.draw.rect(SCREEN, (0, 0, 255), mine_button)
-        pg.draw.rect(SCREEN, (255, 255, 255), mortar_button)
+        SCREEN.blit(building_frame,wall_button)
+        blit_text(wall_button,"장벽",wall_button.height/4)
+        blit_text(wall_button,f"{sp.Wall.price[0]} 골드",wall_button.height/4*3)
 
+        SCREEN.blit(building_frame,canon_button)
+        blit_text(canon_button,"대포",canon_button.height/4)
+        blit_text(canon_button,f"{sp.Canon.price[0]} 골드",canon_button.height/4*3)
+
+        SCREEN.blit(building_frame,mine_button)
+        blit_text(mine_button,"광산",mine_button.height/4)
+        blit_text(mine_button,f"{sp.Mine.price[0]} 골드",mine_button.height/4*3)
+
+        SCREEN.blit(building_frame,mortar_button)
+        blit_text(mortar_button,"박격포",mortar_button.height/4)
+        blit_text(mortar_button,f"{sp.Mortar.price[0]} 골드",mortar_button.height/4*3)
+
+        if wall_button.collidepoint((mx,my)):
+            SCREEN.blit(outline_building_frame,wall_button)
+        
+        elif canon_button.collidepoint((mx,my)):
+            SCREEN.blit(outline_building_frame,canon_button)
+            
+        elif mine_button.collidepoint((mx,my)):
+            SCREEN.blit(outline_building_frame,mine_button)
+            
+        elif mortar_button.collidepoint((mx,my)):
+            SCREEN.blit(outline_building_frame,mortar_button)
         #현재 골드 표시
         msg_gold = MYFONT.render("골드 : {}".format(player.gold),True,WHITE)
         SCREEN.blit(msg_gold,(10,10))
@@ -490,8 +563,6 @@ play_button.center = (WIDTH/2,HEIGHT/2)
 
 def main_menu():
     click = 0
-    character_list = ["human","wizard"]
-    select = 0
     running = 1
     while running:
         SCREEN.fill(BLACK)
@@ -503,14 +574,6 @@ def main_menu():
                 if event.key == K_ESCAPE:
                     pg.quit()
                     exit()
-                elif event.key == K_RIGHT:
-                    select += 1
-                    if select > len(character_list) - 1:
-                        select = 0
-                elif event.key == K_LEFT:
-                    select -= 1
-                    if select < 0:
-                        select = len(character_list) - 1
             elif event.type == MOUSEBUTTONDOWN:
                 click = 1
             elif event.type == MOUSEBUTTONUP:
@@ -520,11 +583,9 @@ def main_menu():
 
         if click:
             if play_button.collidepoint((mx, my)):
-                game(character_list[select])
+                game()
                 click = 0
-        
-        msg_character = MYFONT.render("Character : {}".format(character_list[select]),True,WHITE)
-        SCREEN.blit(msg_character,(WIDTH/2,HEIGHT/2 - 200))
+    
 
         msg_title = MYFONT.render("game_project",True,WHITE)
         SCREEN.blit(msg_title,(WIDTH/2,100))

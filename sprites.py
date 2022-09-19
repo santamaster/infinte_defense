@@ -1,8 +1,7 @@
 import pygame as pg
 from pygame.locals import *
 from setting import *
-from random import random
-import math
+from random import random,randint
 #스프라이트 그룹
 all_sprites = pg.sprite.Group()         #모든 스프라이트 그룹
 player_sprites = pg.sprite.Group()      #플레이어 스프라이트 그룹
@@ -16,6 +15,7 @@ wall_sprites = pg.sprite.Group()
 mine_sprites = pg.sprite.Group()
 canon_sprites = pg.sprite.Group()
 
+fire_sprites = pg.sprite.Group()
 #게임 플레이에 영향을 미치지 않는 스프라이트 그룹
 effect_sprites = pg.sprite.Group()
 message_sprites = pg.sprite.Group()
@@ -27,6 +27,9 @@ class Player(pg.sprite.Sprite):
     hp = 1000
     vel = 10
     required_exp = [20,40,400,600,1000]
+    gold_cooldown = 1* FPS
+    gold_output = 3
+    start_gold = 1000
     def __init__(self):
         super().__init__()
         all_sprites.add(self)
@@ -34,20 +37,21 @@ class Player(pg.sprite.Sprite):
         attackable_sprites.add(self)
         creature_sprites.add(self)
         #플레이어 기본 변수 
-        self.max_hp = None
-        self.hp = None
+        self.max_hp = Player.hp
+        self.hp = Player.hp
         self.vector = pg.math.Vector2(BG_WIDTH/2,516)
-        self.image = None
-        self.rect = None
-        self.shown_rect = None
-        self.vel = None
-        self.hp_bar = None
+        self.image = PLAYER_IMAGE
+        self.rect = self.image.get_rect()
+        self.shown_rect = self.rect.copy()
+        self.vel = Player.vel
+        self.hp_bar = pg.Rect(0,0,10,self.rect.width)
         self.jumping = False
         self.jump_vel = 0
         self.jump_pw = 0
-        self.gold = 0
-        self.gold_output = 1
-        self.gold_cooldown = None
+        self.gold = Player.start_gold
+        self.total_gold = Player.start_gold
+        self.gold_output = Player.gold_output
+        self.gold_cooldown = Player.gold_cooldown
         self.gold_counter = 0
         self.level = 1
         self.exp = 0
@@ -90,51 +94,18 @@ class Player(pg.sprite.Sprite):
         if self.exp >= self.reqired_exp:
             self.exp -= self.reqired_exp
             self.level_up()
+
     def level_up(self):
         if self.level < self.max_level:
             self.level += 1
             self.reqired_exp = Player.required_exp[self.level-1]
 
-#인간
-class Human(Player):
-    gold_cooldown = 0.5* FPS
-    gold_output = 1
-    start_gold = 1000
-    def __init__(self):
-        super().__init__()
-        self.max_hp = Player.hp
-        self.hp = Player.hp
-        self.image = HUMAN_IMAGE
-        self.rect = self.image.get_rect()
-        self.rect.midbottom = self.vector
-        self.hp_bar = pg.Rect(0,0,10,self.rect.width)
-        self.vel = Player.vel
-        self.gold = Human.start_gold
-        self.total_gold = Human.start_gold
-        self.gold_cooldown = Human.gold_cooldown
-        self.gold_output = Human.gold_output
-#마법사
-class Wizard(Player):
-    gold_cooldown = 0.5* FPS
-    gold_output = 1
-    start_gold = 1000
-    def __init__(self):
-        super().__init__()
-        self.max_hp = Player.hp
-        self.hp = Player.hp
-        self.image = WIZARD_IMAGE
-        self.rect = self.image.get_rect()
-        self.rect.midbottom = self.vector
-        self.hp_bar = pg.Rect(0,0,10,self.rect.width)
-        self.vel = Player.vel
-        self.gold = Wizard.start_gold
-        self.total_gold = Wizard.start_gold
-        self.gold_cooldown = Wizard.gold_cooldown
-        self.gold_output = Wizard.gold_output
 
 #적
 class Enemy(pg.sprite.Sprite):
     damage_rate = 1
+    get_gold = 0
+    damaged_by_wall = 0
     def __init__(self,player):
         super().__init__()
         enemy_sprites.add(self)
@@ -171,11 +142,17 @@ class Enemy(pg.sprite.Sprite):
                 if self.first_attack_counter >= self.first_attack_cooldown:
                     self.first_attack = 1
                     target.hp -= self.attack_dmg * Enemy.damage_rate
+                    if Enemy.damaged_by_wall:
+                        if target in wall_sprites:
+                            self.hp -= 10
             else:
                 self.attack_counter += 1
                 if self.attack_counter >= self.attack_cooldown:
                     self.attack_counter = 0
                     target.hp -= self.attack_dmg * Enemy.damage_rate
+                    if Enemy.damaged_by_wall:
+                        if target in wall_sprites:
+                            self.hp -= 10
 
         else:
             self.attack_counter = 0
@@ -201,6 +178,9 @@ class Enemy(pg.sprite.Sprite):
         self.attack()
         self.move()
         if self.hp <= 0:
+            if Enemy.get_gold:
+                self.player.gold +=5
+                Earn_gold_effect(self)
             self.player.get_exp(self.exp)
             self.kill()
         
@@ -242,6 +222,9 @@ class Zombie(Enemy):
         self.attack()
         self.move()
         if self.hp <= 0:
+            if Enemy.get_gold:
+                self.player.gold +=5
+                Earn_gold_effect(self)
             self.player.get_exp(self.exp)
             self.kill()
 
@@ -309,7 +292,7 @@ class Wall(Building):
     def self_heal(self):
         self.heal_counter += 1
         if self.heal_counter >= Wall.heal_cooldown:
-            self.hp += self.max_hp * 0.01
+            self.hp += self.max_hp * 0.02
             if self.hp >= self.max_hp:
                 self.hp = self.max_hp
             else:
@@ -333,6 +316,7 @@ class Canon(Building):
     enhanced_attack_chance = 0
     enhanced_attack_damage = 2
     hp_bar_width = 150
+    double_barrel = 0
     def __init__(self,vector,player):
         super().__init__(player)
         canon_sprites.add(self)
@@ -357,13 +341,17 @@ class Canon(Building):
         self.price = Canon.price[self.level-1]
         self.upgrade_price = Canon.price[self.level]
         self.hp_bar = Hp_bar(self,Canon.hp_bar_width)
-        
+        self.total_damage_rate = 1
     def attack(self):
         #사거리 안에 있는 적
         enemy_in_range = [ sprite for sprite in enemy_sprites.sprites() \
                 if abs(sprite.vector.x - self.vector.x) <= Canon.attack_range]
 
         if enemy_in_range:
+            self.total_damage_rate = Canon.damage_rate
+            if Canon.enhanced_attack_chance >= random():
+                self.total_damage_rate *= Canon.enhanced_attack_damage
+
             #사거리 안에 있는 적들 중 가장 가까운 적
             target = sorted(enemy_in_range,key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
             if not self.first_attack:
@@ -373,17 +361,11 @@ class Canon(Building):
                     if target.vector.x - self.vector.x >= 0:
                         self.image = CANON_IMAGE
                         self.outline_image = OUTLINE_CANON
-                        if Canon.enhanced_attack_chance >= random():
-                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage*Canon.damage_rate,"right",self.vector)
-                        else:
-                            CanonShot(self.attack_dmg*Canon.damage_rate,"right",self.vector)
+                        CanonShot(self.attack_dmg*self.total_damage_rate,"right",self.vector)
                     elif target.vector.x - self.vector.x < 0:
                         self.image = CANON_IMAGE_L
                         self.outline_image = OUTLINE_CANON_L
-                        if Canon.enhanced_attack_chance >= random():
-                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage*Canon.damage_rate,"left",self.vector)
-                        else:
-                            CanonShot(self.attack_dmg*Canon.damage_rate,"left",self.vector)
+                        CanonShot(self.attack_dmg*self.total_damage_rate,"left",self.vector)
             else:
                 self.attack_counter += 1
                 if self.attack_counter >= Canon.attack_cooldown:
@@ -391,17 +373,12 @@ class Canon(Building):
                     if target.vector.x - self.vector.x >= 0:
                         self.image = CANON_IMAGE
                         self.outline_image = OUTLINE_CANON
-                        if Canon.enhanced_attack_chance >= random():
-                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage*Canon.damage_rate,"right",self.vector)
-                        else:
-                            CanonShot(self.attack_dmg*Canon.damage_rate,"right",self.vector)
+                        CanonShot(self.attack_dmg*self.total_damage_rate,"right",self.vector)
+
                     elif target.vector.x - self.vector.x < 0:
                         self.image = CANON_IMAGE_L
                         self.outline_image = OUTLINE_CANON_L
-                        if Canon.enhanced_attack_chance >= random():
-                            CanonShot(self.attack_dmg*Canon.enhanced_attack_damage*Canon.damage_rate,"left",self.vector)
-                        else:
-                            CanonShot(self.attack_dmg*Canon.damage_rate,"left",self.vector)
+                        CanonShot(self.attack_dmg*self.total_damage_rate,"left",self.vector)
         else:
             self.first_attack_counter = 0
             self.attack_counter = 0
@@ -469,10 +446,10 @@ class Mortar(Building):
     price = [500,600,700]
     hp = [500,600,700]
     attack_dmg = [100,150,200]
-    hp_bar_width = 150
+    hp_bar_width = 100
     max_level = 3
     power = 30
-    lavashot = 0
+    lavashot = 1
     damage_rate = 1
     def __init__(self,vector,player):
         super().__init__(player)
@@ -482,12 +459,8 @@ class Mortar(Building):
         self.hp = Mortar.hp[self.level-1]
         self.attack_dmg = Mortar.attack_dmg[self.level-1]
         self.vector = vector
-        if self.vector.x >= BG_WIDTH/2:
-            self.image = MORTAR_IMAGE
-            self.outline_image = OUTLINE_MORTAR
-        else:
-            self.image = MORTAR_IMAGE_L
-            self.outline_image = OUTLINE_MORTAR_L
+        self.image = MORTAR_IMAGE
+        self.outline_image = OUTLINE_MORTAR
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
         self.rect.midbottom = self.vector
@@ -511,23 +484,12 @@ class Mortar(Building):
                 if self.first_attack_counter >= Mortar.first_attack_cooldown:
                     self.first_attack = 1
                     MortarShot(self.attack_dmg*Mortar.damage_rate,self.vector,target.vector,Mortar.power,Mortar.lavashot)
-                    if target.vector.x - self.vector.x >= 0:
-                        self.image = MORTAR_IMAGE
-                        self.outline_image = OUTLINE_MORTAR
-                    elif target.vector.x - self.vector.x < 0:
-                        self.image = MORTAR_IMAGE_L
-                        self.outline_image = OUTLINE_MORTAR_L
             else:
                 self.attack_counter += 1
                 if self.attack_counter >= Mortar.attack_cooldown:
                     self.attack_counter = 0
                     MortarShot(self.attack_dmg*Mortar.damage_rate,self.vector,target.vector,Mortar.power,Mortar.lavashot)
-                    if target.vector.x - self.vector.x >= 0:
-                        self.image = MORTAR_IMAGE
-                        self.outline_image = OUTLINE_MORTAR
-                    elif target.vector.x - self.vector.x < 0:
-                        self.image = MORTAR_IMAGE_L
-                        self.outline_image = OUTLINE_MORTAR_L
+
         else:
             self.first_attack_counter = 0
             self.attack_counter = 0
@@ -575,7 +537,7 @@ class MortarShot(pg.sprite.Sprite):
                 for sprite in collided_sprite:
                     sprite.hp -= self.attack_dmg
             if self.lavashot:
-                FireZone()
+                FireZone(5,10,self.vector)
             self.kill()
     def move(self):
         self.vector.x += self.delta_x
@@ -590,10 +552,17 @@ class MortarShot(pg.sprite.Sprite):
 #TODO
 #화염 지대
 class FireZone(pg.sprite.Sprite):
-    def __init__(self,duration):
+
+    def __init__(self,duration,radius,location):
         super().__init__()
+        fire_sprites.add(self)
         self.duration = duration
-        
+        self.radius = radius
+        self.location = location
+        self.width, self.height = self.radius*2, 10
+        self.pixel_size = 5
+        self.intensity = (14,32)
+    
 
 class Mine(Building):
     hp = [300,400,600]

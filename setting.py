@@ -59,19 +59,22 @@ def get_outline(image,outline_thickness=3,color=(255,255,255,255)):
 
 #폰트,배경 및 기타
 MYFONT = pg.font.Font("resources\\font\\NeoDunggeunmoPro-Regular.ttf",30)
-BACKGROUND_IMG = pg.transform.scale(pg.image.load("resources\\images\\background.png").convert_alpha(),(BG_WIDTH,BG_HEIGHT))
-GROUND_IMG = pg.transform.scale(pg.image.load("resources\\images\\ground.png").convert_alpha(),(BG_WIDTH,BG_HEIGHT))
-HP_FRAME_IMG = pg.transform.scale(pg.image.load("resources\\images\\hp_bar_frame.png").convert_alpha(),(HP_FRAME_WIDTH,HP_FRAME_HEIGHT))
-MENU_FRAME = pg.image.load("resources\\images\\menu_frame.png").convert_alpha()
+BACKGROUND_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\background.png").convert_alpha(),(BG_WIDTH,BG_HEIGHT))
+GROUND_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\ground.png").convert_alpha(),(BG_WIDTH,BG_HEIGHT))
+HP_FRAME_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\hp_bar_frame.png").convert_alpha(),(HP_FRAME_WIDTH,HP_FRAME_HEIGHT))
+MENU_FRAME = pg.transform.scale(pg.image.load("resources\\images\\frame.png").convert_alpha(),(300,500))
+ABILITY_FRAME =MENU_FRAME.copy()
+OUTLINE_ABILITY_FRAME = get_outline(ABILITY_FRAME)
+BUILDING_FRAME = pg.transform.scale(pg.image.load("resources\\images\\frame.png").convert_alpha(),(120,200))
+OUTLINE_BUILDING_FRAME = get_outline(BUILDING_FRAME)
 BUTTON = pg.image.load("resources\\images\\button.png").convert_alpha()
 UPGRADE_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\upgrade.png").convert_alpha(),(50,50))
 SELL_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\sell.png").convert_alpha(),(50,50))
 BUILD_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\build.png").convert_alpha(),(100,100))
-#HUMAN
-HUMAN_IMAGE = pg.image.load("resources\\images\\human.png").convert_alpha()
-
-#WIZARD
-WIZARD_IMAGE = pg.image.load("resources\\images\\human.png").convert_alpha()
+REPLAY_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\replay.png").convert_alpha(),(50,50))
+GOTO_MAIN_MENU_BUTTON =pg.transform.scale(pg.image.load("resources\\images\\exit.png").convert_alpha(),(50,50))
+PLAYER_IMAGE = pg.image.load("resources\\images\\player.png").convert_alpha()
+COIN_IMAGE = pg.image.load("resources\\images\\gold1.png").convert_alpha()
 
 #ZOMBIE
 ZOMBIE_IMAGE_SIZE = (100,150)
@@ -93,9 +96,7 @@ CANONSHOT_IMAGE = pg.image.load("resources\\images\\canonshot.png").convert_alph
 #MORTAR
 MORTAR_IMAGE_SIZE = (100,150)
 MORTAR_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mortar.png").convert_alpha(),MORTAR_IMAGE_SIZE)
-MORTAR_IMAGE_L = pg.transform.flip(MORTAR_IMAGE,True,False)
 OUTLINE_MORTAR = get_outline(MORTAR_IMAGE)
-OUTLINE_MORTAR_L = get_outline(MORTAR_IMAGE_L)
 MORTARSHOT_IMAGE = pg.image.load("resources\\images\\canonshot.png").convert_alpha()
 
 #MINE
