@@ -80,6 +80,12 @@ COIN_IMAGE = pg.image.load("resources\\images\\gold1.png").convert_alpha()
 ZOMBIE_IMAGE_SIZE = (100,150)
 ZOMBIE_IMAGE = pg.image.load("resources\\images\\zombie.png").convert_alpha()
 
+#SKELETON
+SKELETON_IMAGE_SIZE = (100,150)
+SKELETON_IMAGE = pg.image.load("resources\\images\\zombie.png").convert_alpha()
+SKELETON_ARROW_IMAGE = pg.image.load("resources\\images\\arrow.png").convert_alpha()
+SKELETON_ARROW_IMAGE_L = pg.transform.flip(SKELETON_ARROW_IMAGE,True,False)
+
 #WALL
 WALL_IMAGE_SIZE = (100,150)
 WALL_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\wall.png").convert_alpha(),WALL_IMAGE_SIZE)
@@ -98,7 +104,7 @@ MORTAR_IMAGE_SIZE = (100,150)
 MORTAR_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mortar.png").convert_alpha(),MORTAR_IMAGE_SIZE)
 OUTLINE_MORTAR = get_outline(MORTAR_IMAGE)
 MORTARSHOT_IMAGE = pg.image.load("resources\\images\\canonshot.png").convert_alpha()
-
+FIRE_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\fire.png").convert_alpha(),(300,100))
 #MINE
 MINE_IMAGE_SIZE = (150,100)
 MINE_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mine.png").convert_alpha(),MINE_IMAGE_SIZE)

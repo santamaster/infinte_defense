@@ -14,8 +14,7 @@ attackable_sprites = pg.sprite.Group()  #적이 공격가능한 스프라이트 
 wall_sprites = pg.sprite.Group()
 mine_sprites = pg.sprite.Group()
 canon_sprites = pg.sprite.Group()
-
-fire_sprites = pg.sprite.Group()
+mortar_sprites = pg.sprite.Group()
 #게임 플레이에 영향을 미치지 않는 스프라이트 그룹
 effect_sprites = pg.sprite.Group()
 message_sprites = pg.sprite.Group()
@@ -187,14 +186,14 @@ class Enemy(pg.sprite.Sprite):
 #좀비
 class Zombie(Enemy):
     hp = [90,150,200]
-    attack_dmg = [50,70,100]
+    attack_dmg = [20,40,60]
     exp = [20,40,60]
     attack_cooldown = 1 * FPS
     first_attack_cooldown = 0.1*FPS
     attack_range = 50
     hp_bar_width = 70
     max_level = 3
-    vel = 5
+    vel = 4
     def __init__(self,spawn_location,player,level=1):
         super().__init__(player)
         self.level = level
@@ -228,6 +227,102 @@ class Zombie(Enemy):
             self.player.get_exp(self.exp)
             self.kill()
 
+class Skeleton(Enemy):
+    hp = [60,120,150]
+    attack_dmg = [50,70,100]
+    exp = [20,40,60]
+    attack_cooldown = 1 * FPS
+    first_attack_cooldown = 0.1*FPS
+    attack_range = 400
+    hp_bar_width = 70
+    max_level = 3
+    vel = 6
+    def __init__(self,spawn_location,player,level=1):
+        super().__init__(player)
+        self.level = level
+        self.max_hp = Skeleton.hp[self.level-1]
+        self.hp = Skeleton.hp[self.level-1]
+        self.exp = Skeleton.exp[self.level-1]
+        self.hp_bar_width = Skeleton.hp_bar_width
+        self.attack_dmg = Skeleton.attack_dmg[self.level-1]
+        self.attack_cooldown = Skeleton.attack_cooldown
+        self.first_attack_cooldown = Skeleton.first_attack_cooldown
+        self.vel = Skeleton.vel
+        self.image = SKELETON_IMAGE
+        self.rect = self.image.get_rect()
+        self.range_rect = self.rect.inflate(2*Skeleton.attack_range,0)
+        if spawn_location == "right":
+            self.vector = pg.math.Vector2(BG_WIDTH,516)
+            self.rect.midbottom = self.vector
+            self.range_rect.center = self.vector
+        elif spawn_location == "left":
+            self.vector = pg.math.Vector2(0,516)
+            self.rect.midbottom = self.vector
+            self.range_rect.center = self.vector
+        self.hp_bar = Hp_bar(self,Skeleton.hp_bar_width)
+    def attack(self):
+        attackable_list = attackable_sprites.sprites()
+        index = self.range_rect.collidelist(attackable_list)
+        if not index == -1:
+            self.status = "attack"
+            target = attackable_list[index]
+            if not self.first_attack:
+                self.first_attack_counter += 1
+                if self.first_attack_counter >= self.first_attack_cooldown:
+                    self.first_attack = 1
+                    Arrow((self.vector.x,self.vector.y-50),target.vector,self.attack_dmg)
+                    if Enemy.damaged_by_wall:
+                        if target in wall_sprites:
+                            self.hp -= 10
+            else:
+                self.attack_counter += 1
+                if self.attack_counter >= self.attack_cooldown:
+                    self.attack_counter = 0
+                    Arrow((self.vector.x,self.vector.y-50),target.vector,self.attack_dmg)
+                    if Enemy.damaged_by_wall:
+                        if target in wall_sprites:
+                            self.hp -= 10
+
+        else:
+            self.attack_counter = 0
+            self.first_attack_counter = 0
+            self.status = "move"
+
+class Arrow(pg.sprite.Sprite):
+    vel = 15
+    power = 1
+    def __init__(self,start_point,end_point,damage):
+        super().__init__()
+        all_sprites.add(self)
+        noncreature_sprites.add(self)
+        self.start_point = pg.math.Vector2(start_point)
+        self.vector = pg.math.Vector2(start_point)
+        self.end_point = pg.math.Vector2(end_point)
+        self.attack_dmg = damage
+        self.time = abs((self.end_point.x-self.start_point.x)/Arrow.vel)
+        if self.end_point.x-self.start_point.x >= 0:
+            self.delta_x = Arrow.vel
+            self.image = SKELETON_ARROW_IMAGE
+        else:
+            self.delta_x = -Arrow.vel
+            self.image = SKELETON_ARROW_IMAGE_L
+        self.delta_y = Arrow.power
+        self.delta_square_y = Arrow.power/(MortarShot.time/2)
+        self.rect = self.image.get_rect()
+        self.shown_rect = self.rect.copy()
+    def attack(self):
+        collided_sprite = pg.sprite.spritecollide(self,attackable_sprites,False)
+        if collided_sprite:
+            collided_sprite[0].hp -= self.attack_dmg
+            self.kill()
+    def move(self):
+        self.vector.x += self.delta_x
+        self.vector.y -= self.delta_y
+        self.delta_y -=self.delta_square_y
+        self.rect.midbottom = self.vector
+    def update(self):
+        self.move()
+        self.attack()
 #건물
 class Building(pg.sprite.Sprite):
     def __init__(self,player):
@@ -317,6 +412,7 @@ class Canon(Building):
     enhanced_attack_damage = 2
     hp_bar_width = 150
     double_barrel = 0
+    double_barrel_interval = 0.1 * FPS
     def __init__(self,vector,player):
         super().__init__(player)
         canon_sprites.add(self)
@@ -338,10 +434,13 @@ class Canon(Building):
         self.attack_counter = 0
         self.first_attack_counter = 0
         self.first_attack = 0
+        self.double_barrel = 0
+        self.double_barrel_counter = 0
         self.price = Canon.price[self.level-1]
         self.upgrade_price = Canon.price[self.level]
         self.hp_bar = Hp_bar(self,Canon.hp_bar_width)
         self.total_damage_rate = 1
+        self.target_direction = ""
     def attack(self):
         #사거리 안에 있는 적
         enemy_in_range = [ sprite for sprite in enemy_sprites.sprites() \
@@ -354,37 +453,43 @@ class Canon(Building):
 
             #사거리 안에 있는 적들 중 가장 가까운 적
             target = sorted(enemy_in_range,key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
+            if target.vector.x - self.vector.x >=0:
+                self.target_direction = "right"
+                self.image = CANON_IMAGE
+                self.outline_image = OUTLINE_CANON
+            else:
+                self.target_direction = "left"
+                self.image = CANON_IMAGE_L
+                self.outline_image = OUTLINE_CANON_L
+
             if not self.first_attack:
                 self.first_attack_counter +=1
                 if self.first_attack_counter >=Canon.first_attack_cooldown:
                     self.first_attack = 1
-                    if target.vector.x - self.vector.x >= 0:
-                        self.image = CANON_IMAGE
-                        self.outline_image = OUTLINE_CANON
-                        CanonShot(self.attack_dmg*self.total_damage_rate,"right",self.vector)
-                    elif target.vector.x - self.vector.x < 0:
-                        self.image = CANON_IMAGE_L
-                        self.outline_image = OUTLINE_CANON_L
-                        CanonShot(self.attack_dmg*self.total_damage_rate,"left",self.vector)
+                    CanonShot(self.attack_dmg*self.total_damage_rate,self.target_direction,self.vector)
+                    self.double_barrel = 1
             else:
                 self.attack_counter += 1
                 if self.attack_counter >= Canon.attack_cooldown:
                     self.attack_counter = 0
-                    if target.vector.x - self.vector.x >= 0:
-                        self.image = CANON_IMAGE
-                        self.outline_image = OUTLINE_CANON
-                        CanonShot(self.attack_dmg*self.total_damage_rate,"right",self.vector)
+                    CanonShot(self.attack_dmg*self.total_damage_rate,self.target_direction,self.vector)
+                    self.double_barrel = 1
+            
 
-                    elif target.vector.x - self.vector.x < 0:
-                        self.image = CANON_IMAGE_L
-                        self.outline_image = OUTLINE_CANON_L
-                        CanonShot(self.attack_dmg*self.total_damage_rate,"left",self.vector)
         else:
             self.first_attack_counter = 0
             self.attack_counter = 0
             self.first_attack = 0
+        if Canon.double_barrel:
+            if self.double_barrel:
+                self.double_barrel_counter += 1
+                if self.double_barrel_counter >= Canon.double_barrel_interval:
+                    CanonShot(self.attack_dmg*self.total_damage_rate,self.target_direction,self.vector)
+                    self.double_barrel_counter = 0
+                    self.double_barrel = 0
+            
+        
 
-        self.rect.midbottom = self.vector
 
     def upgrade(self):
         if self.level < Canon.max_level:
@@ -401,6 +506,8 @@ class Canon(Building):
         self.attack()
         if self.hp <= 0:
             self.kill()
+        self.rect.midbottom = self.vector
+
 
 #포탄
 class CanonShot(pg.sprite.Sprite):
@@ -443,16 +550,17 @@ class Mortar(Building):
     attack_range = 1200
     first_attack_cooldown = 3*FPS
     attack_cooldown = 5*FPS
-    price = [500,600,700]
+    price = [400,600,700]
     hp = [500,600,700]
     attack_dmg = [100,150,200]
     hp_bar_width = 100
     max_level = 3
     power = 30
-    lavashot = 1
+    lavashot = 0
     damage_rate = 1
     def __init__(self,vector,player):
         super().__init__(player)
+        mortar_sprites.add(self)
         self.level = 1
         self.max_level = Mortar.max_level
         self.max_hp = Mortar.hp[self.level-1]
@@ -537,7 +645,7 @@ class MortarShot(pg.sprite.Sprite):
                 for sprite in collided_sprite:
                     sprite.hp -= self.attack_dmg
             if self.lavashot:
-                FireZone(5,10,self.vector)
+                FireZone(self.vector,8,3*FPS)
             self.kill()
     def move(self):
         self.vector.x += self.delta_x
@@ -549,19 +657,39 @@ class MortarShot(pg.sprite.Sprite):
         self.move()
         self.attack()
 
-#TODO
 #화염 지대
 class FireZone(pg.sprite.Sprite):
-
-    def __init__(self,duration,radius,location):
+    def __init__(self,vector,damage,duration):
         super().__init__()
-        fire_sprites.add(self)
+        all_sprites.add(self)
+        noncreature_sprites.add(self)
+        self.attack_dmg = damage
+        self.vector = vector
+        self.image = FIRE_IMAGE
+        self.rect = self.image.get_rect()
+        self.shown_rect = self.rect.copy()
+        self.rect.midbottom = self.vector
+        self.damage_interval = 0.2*FPS
+        self.interval_counter = 0
         self.duration = duration
-        self.radius = radius
-        self.location = location
-        self.width, self.height = self.radius*2, 10
-        self.pixel_size = 5
-        self.intensity = (14,32)
+        self.duration_counter = 0
+    def attack(self):
+        self.interval_counter += 1
+        if self.interval_counter >= self.damage_interval:
+            collided_sprite = pg.sprite.spritecollide(self,enemy_sprites,False)
+            if collided_sprite:
+                for sprite in collided_sprite:
+                    sprite.hp -= self.attack_dmg
+            self.interval_counter = 0
+    def update(self):
+        self.attack()
+        self.duration_counter += 1
+        if self.duration_counter >= self.duration:
+            self.kill()
+        self.rect.midbottom = self.vector
+
+
+
     
 
 class Mine(Building):

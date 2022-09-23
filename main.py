@@ -8,7 +8,7 @@ import ability as ab
 from random import random,choice,sample
 
 #초기화
-def reset():
+def reset(): 
     for sprite in sp.all_sprites:
         sprite.kill()
     for sprite in sp.hp_bar_sprites:
@@ -26,8 +26,6 @@ def reset():
     sp.Enemy.get_gold = 0
     sp.Enemy.damaged_by_wall = 0
 
-
-
 #적 생성 시스템
 def enemy_spawn(game_sec,player):
     spawn_location = "left","right"
@@ -36,15 +34,20 @@ def enemy_spawn(game_sec,player):
     if game_sec <= 30:      #30초 이내
         if random()*FPS <= 0.2:  #1초당 0.1마리
             sp.Zombie(choice(spawn_location),player)
+            sp.Skeleton(choice(spawn_location),player)
     elif game_sec <= 60:    #30~60초
         if random()*FPS <= 0.3:  #1초당 0.2마리
             sp.Zombie(choice(spawn_location),player)
+            sp.Skeleton(choice(spawn_location),player)
     elif game_sec <= 120:   #60~120초
         if random()*FPS <= 0.5:  #1초당 0.5마리
             sp.Zombie(choice(spawn_location),player)
+            sp.Skeleton(choice(spawn_location),player)
     else:                   #120초 이후
         if random()*FPS <= 1:    #1초당 1마리
             sp.Zombie(choice(spawn_location),player)
+            sp.Skeleton(choice(spawn_location),player)
+
 
 #자동으로 줄바꿈 및 화면 출력(가운데 정렬)
 def blit_text(rect, text, pos, color=BLACK):
@@ -163,23 +166,25 @@ def game():
             player_level = player.level
 
             if player_level == 2:
+                ab.get_level_2_ability()
                 ability123_list = sample(ab.level_2_ability,3)
             elif player_level == 3:
+                ab.get_level_3_ability()
                 ability123_list = sample(ab.level_3_ability,3)
             elif player_level == 4:
+                ab.get_level_4_ability()
                 ability123_list = sample(ab.level_4_ability,3)
             elif player_level == 5:
+                ab.get_level_5_ability()
                 ability123_list = sample(ab.level_5_ability,3)
             elif player_level == 6:
+                ab.get_level_6_ability()
                 ability123_list = sample(ab.level_6_ability,3)
 
             select_ability = 1
             sp.Message("level_up!",GREEN)
-        
-
 
         if select_ability:
-
             camera.darkened_draw()
             SCREEN.blit(ability_frame,ability1)
             blit_text(ability1,ab.ability_info[ability123_list[0]][0],ability1.height/4)
@@ -235,6 +240,11 @@ def game():
                     selected_sprite = None
                     player_level = 1
                     continue
+
+                elif menu_frame.collidepoint((mx,my)):
+                    pass
+                else:
+                    menu = 0
             
             #메뉴 그리기
             SCREEN.blit(menu_frame_image,menu_frame)
@@ -264,7 +274,7 @@ def game():
         enemy_spawn(game_sec,player)
 
         #카메라 움직이기
-        camera.player_follow()
+        camera.player_follow() 
 
         #카메라로 화면 그리기
         camera.draw()
@@ -273,6 +283,11 @@ def game():
         sp.all_sprites.update()
         game_tick += 1
 
+        #효과 업데이트
+        if ab.effect_list:
+            for effect in ab.effect_list:
+                effect.update()
+        
         #건물 설치 버튼
         SCREEN.blit(build_image,build_button)
         #버튼 클릭시 실행
@@ -385,9 +400,9 @@ def collision_check(rect,camera):
     for sprite in sp.building_sprites.sprites() + sp.enemy_sprites.sprites():
         if rect.left <= sprite.rect.right - camera.offset.x and \
             rect.right >= sprite.rect.left - camera.offset.x:
-            return True
+            return 1
             
-    return False
+    return 0
 
 exit_image = SELL_BUTTON
 exit_button = exit_image.get_rect()
