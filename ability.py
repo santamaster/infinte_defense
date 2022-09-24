@@ -2,7 +2,7 @@ import pygame as pg
 from setting import *
 import sprites as sp
 import random
-"""현재 능력 갯수 : 15"""
+"""현재 능력 갯수 : 16"""
 
 effect_list = []
 #플레이어 체력 회복
@@ -103,23 +103,29 @@ def lava_shot():
     sp.Mortar.lavashot = 1
     sp.Mortar.damage_rate = 0.6
 
+def fast_shot():
+    sp.Message("박격포의 재사용 대기시간이 30% 감소합니다.")
+    sp.Mortar.first_attack_cooldown_reduction *= 0.7
+    sp.Mortar.attack_cooldown_reduction *= 0.7
 
 """----------광산----------"""
 #광산 채굴 속도 향상
 def mine_faster():
     sp.Message("광산 채굴 속도 향상")
-    sp.Mine.gold_cooldown_rate *= 0.8
+    sp.Mine.gold_cooldown_rate *= 0.7
 
 
 
 
 level_2_ability = [canon_increase_damage,canon_enhanced_attack,canon_infite_range,double_barrel,get_gold_when_kill_enemy,building_gold]
 def get_level_2_ability():
-    if len(sp.mine_sprites) >= 2:
-        level_2_ability.append(mine_faster)
-    if len(sp.wall_sprites) >= 2:
-        level_2_ability.append(wall_self_healing)
-        level_2_ability.append(attacking_wall)
+    # if len(sp.mine_sprites) >= 2:
+    #     level_2_ability.append(mine_faster)
+    # if len(sp.wall_sprites) >= 2:
+    #     level_2_ability.append(wall_self_healing)
+    #     level_2_ability.append(attacking_wall)
+    pass
+level_2_ability = [canon_increase_damage,canon_enhanced_attack,fast_shot]
 
 level_3_ability = [canon_increase_damage,canon_enhanced_attack,mine_faster]
 def get_level_3_ability():
@@ -163,8 +169,8 @@ ability_info = {player_health_recovery:["체력 회복","플레이어의 체력�
                 double_barrel:["더블 배럴","대포의 공격력이 40% 감소하지만 연속해서 2번 공격합니다."],\
 
                 lava_shot:["용암 발사","박격포의 공격력이 40% 감소하지만 박격포의 포탄이 용암지대를 만듭니다."],\
-
-                mine_faster:["가속","광산의 채굴 속도가 20% 빨라집니다."],\
+                fast_shot:["빠른 공격","첫 공격 시간이 0.1초로 줄어듭니다."],\
+                mine_faster:["가속","광산의 채굴 속도가 30% 빨라집니다."],\
 
                 }
 

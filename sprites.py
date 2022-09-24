@@ -548,8 +548,10 @@ class CanonShot(pg.sprite.Sprite):
 
 class Mortar(Building):
     attack_range = 1200
-    first_attack_cooldown = 3*FPS
-    attack_cooldown = 5*FPS
+    first_attack_cooldown = 1*FPS
+    attack_cooldown = 3*FPS
+    first_attack_cooldown_reduction = 1
+    attack_cooldown_reduction = 1
     price = [400,600,700]
     hp = [500,600,700]
     attack_dmg = [100,150,200]
@@ -589,12 +591,12 @@ class Mortar(Building):
             target = sorted(enemy_in_range,key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
             if not self.first_attack:
                 self.first_attack_counter +=1
-                if self.first_attack_counter >= Mortar.first_attack_cooldown:
+                if self.first_attack_counter >= Mortar.first_attack_cooldown* Mortar.first_attack_cooldown_reduction:
                     self.first_attack = 1
                     MortarShot(self.attack_dmg*Mortar.damage_rate,self.vector,target.vector,Mortar.power,Mortar.lavashot)
             else:
                 self.attack_counter += 1
-                if self.attack_counter >= Mortar.attack_cooldown:
+                if self.attack_counter >= Mortar.attack_cooldown* Mortar.attack_cooldown_reduction:
                     self.attack_counter = 0
                     MortarShot(self.attack_dmg*Mortar.damage_rate,self.vector,target.vector,Mortar.power,Mortar.lavashot)
 

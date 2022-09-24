@@ -9,7 +9,7 @@ GREEN = (0,255,0)
 BLUE = (0,0,255)
 GRAY = (128,128,128)
 BLACK = (0,0,0)
-
+DEEP_PURPLE = (51,0,35)
 #시스템 설정
 WIDTH, HEIGHT = 1366,768 
 BG_WIDTH,BG_HEIGHT=4000,768
@@ -57,15 +57,31 @@ def get_outline(image,outline_thickness=3,color=(255,255,255,255)):
 
     return mask.to_surface(setcolor=color,unsetcolor=(0,0,0,0))
 
+def blurSurf(surface, amt):
+    """
+    Blur the given surface by the given 'amount'.  Only values 1 and greater
+    are valid.  Value 1 = no blur.
+    """
+    if amt < 1.0:
+        raise ValueError("Arg 'amt' must be greater than 1.0, passed in value is %s"%amt)
+    scale = 1.0/float(amt)
+    surf_size = surface.get_size()
+    scale_size = (int(surf_size[0]*scale), int(surf_size[1]*scale))
+    surf = pg.transform.smoothscale(surface, scale_size)
+    surf = pg.transform.smoothscale(surf, surf_size)
+    return surf
+
 #폰트,배경 및 기타
 MYFONT = pg.font.Font("resources\\font\\NeoDunggeunmoPro-Regular.ttf",30)
 BACKGROUND_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\background.png").convert_alpha(),(BG_WIDTH,BG_HEIGHT))
+BLURRED_BACKGROUDN_IMAGE = blurSurf(BACKGROUND_IMAGE.subsurface((BG_WIDTH/2-WIDTH/2,0,WIDTH,HEIGHT)),5)
 GROUND_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\ground.png").convert_alpha(),(BG_WIDTH,BG_HEIGHT))
 HP_FRAME_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\hp_bar_frame.png").convert_alpha(),(HP_FRAME_WIDTH,HP_FRAME_HEIGHT))
-MENU_FRAME = pg.transform.scale(pg.image.load("resources\\images\\frame.png").convert_alpha(),(300,500))
-ABILITY_FRAME =MENU_FRAME.copy()
+MENU_FRAME = pg.transform.scale(pg.image.load("resources\\images\\menu_frame.png").convert_alpha(),(250,100))
+PLAY_FRAME = MENU_FRAME.copy()
+ABILITY_FRAME = pg.transform.scale(pg.image.load("resources\\images\\ability_frame.png").convert_alpha(),(300,500))
 OUTLINE_ABILITY_FRAME = get_outline(ABILITY_FRAME)
-BUILDING_FRAME = pg.transform.scale(pg.image.load("resources\\images\\frame.png").convert_alpha(),(120,200))
+BUILDING_FRAME = pg.transform.scale(pg.image.load("resources\\images\\ability_frame.png").convert_alpha(),(120,200))
 OUTLINE_BUILDING_FRAME = get_outline(BUILDING_FRAME)
 BUTTON = pg.image.load("resources\\images\\button.png").convert_alpha()
 UPGRADE_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\upgrade.png").convert_alpha(),(50,50))

@@ -21,10 +21,13 @@ def reset():
     sp.Canon.double_barrel = 0
     sp.Mortar.lavashot = 0
     sp.Mortar.damage_rate = 1
+    sp.Mortar.first_attack_cooldown_reduction = 1
+    sp.Mortar.attack_cooldown = 1
     sp.MortarShot.time = 1*FPS
     sp.Enemy.damage_rate = 1
     sp.Enemy.get_gold = 0
     sp.Enemy.damaged_by_wall = 0
+    ab.effect_list = []
 
 #적 생성 시스템
 def enemy_spawn(game_sec,player):
@@ -80,19 +83,17 @@ menu_frame_image = MENU_FRAME
 menu_frame = menu_frame_image.get_rect()
 menu_frame.center = (WIDTH/2,HEIGHT/2)
 
-button_image = BUTTON
 
 goto_main_menu_image = GOTO_MAIN_MENU_BUTTON
 goto_main_menu = goto_main_menu_image.get_rect()
-goto_main_menu.center = (WIDTH/2+70,HEIGHT/2 + 200)
+goto_main_menu.center = (WIDTH/2+50,HEIGHT/2)
 
-go_back_text = MYFONT.render("돌아가기",True,BLACK)
-go_back = button_image.get_rect()
-go_back.center = (WIDTH/2,HEIGHT/2 - 50)
 
 replay_image = REPLAY_BUTTON
 replay = replay_image.get_rect()
-replay.center = (WIDTH/2-70,HEIGHT/2 + 200)
+replay.center = (WIDTH/2-50,HEIGHT/2)
+
+button_image = BUTTON
 
 goto_mainmenu_defeat = button_image.get_rect()
 goto_mainmenu_defeat.center = (WIDTH/2,HEIGHT/2)
@@ -225,9 +226,7 @@ def game():
             camera.darkened_draw()
 
             if click:
-                if go_back.collidepoint((mx,my)):
-                    menu = 0
-                elif goto_main_menu.collidepoint((mx,my)):
+                if goto_main_menu.collidepoint((mx,my)):
                     reset()
                     break
                 elif replay.collidepoint((mx,my)):
@@ -249,7 +248,6 @@ def game():
             #메뉴 그리기
             SCREEN.blit(menu_frame_image,menu_frame)
             SCREEN.blit(goto_main_menu_image,goto_main_menu)
-            SCREEN.blit(button_image,go_back)
             SCREEN.blit(replay_image,replay)
             
             pg.display.flip()
@@ -541,20 +539,20 @@ def build(camera,player):
 
         SCREEN.blit(exit_image,exit_button)        
         SCREEN.blit(building_frame,wall_button)
-        blit_text(wall_button,"장벽",wall_button.height/4)
-        blit_text(wall_button,f"{sp.Wall.price[0]} 골드",wall_button.height/4*3)
+        blit_text(wall_button,"장벽",wall_button.height/4,DEEP_PURPLE)
+        blit_text(wall_button,f"{sp.Wall.price[0]} 골드",wall_button.height/4*3,DEEP_PURPLE)
 
         SCREEN.blit(building_frame,canon_button)
-        blit_text(canon_button,"대포",canon_button.height/4)
-        blit_text(canon_button,f"{sp.Canon.price[0]} 골드",canon_button.height/4*3)
+        blit_text(canon_button,"대포",canon_button.height/4,DEEP_PURPLE)
+        blit_text(canon_button,f"{sp.Canon.price[0]} 골드",canon_button.height/4*3,DEEP_PURPLE)
 
         SCREEN.blit(building_frame,mine_button)
-        blit_text(mine_button,"광산",mine_button.height/4)
-        blit_text(mine_button,f"{sp.Mine.price[0]} 골드",mine_button.height/4*3)
+        blit_text(mine_button,"광산",mine_button.height/4,DEEP_PURPLE)
+        blit_text(mine_button,f"{sp.Mine.price[0]} 골드",mine_button.height/4*3,DEEP_PURPLE)
 
         SCREEN.blit(building_frame,mortar_button)
-        blit_text(mortar_button,"박격포",mortar_button.height/4)
-        blit_text(mortar_button,f"{sp.Mortar.price[0]} 골드",mortar_button.height/4*3)
+        blit_text(mortar_button,"박격포",mortar_button.height/4,DEEP_PURPLE)
+        blit_text(mortar_button,f"{sp.Mortar.price[0]} 골드",mortar_button.height/4*3,DEEP_PURPLE)
 
         if wall_button.collidepoint((mx,my)):
             SCREEN.blit(outline_building_frame,wall_button)
@@ -573,14 +571,27 @@ def build(camera,player):
 
         pg.display.flip()
 
-play_button = pg.Rect(0,0,200,100)
-play_button.center = (WIDTH/2,HEIGHT/2)
 
+msg_title = MYFONT.render("game_project",True,DEEP_PURPLE)
+msg_title_rect = msg_title.get_rect(center=(WIDTH/2,100))
+
+play_image = PLAY_FRAME
+play_button = play_image.get_rect(center=(WIDTH/2,HEIGHT/2+100))
+msg_play = MYFONT.render("플레이!",True,DEEP_PURPLE)
+msg_play_white = MYFONT.render("플레이!",True,WHITE)
+
+msg_play_rect = msg_play.get_rect(center=(WIDTH/2,HEIGHT/2+100))
+
+end_image = PLAY_FRAME
+end_button = end_image.get_rect(center=(WIDTH/2,HEIGHT/2+250))
+msg_end = MYFONT.render("종료",True,DEEP_PURPLE)
+msg_end_white = MYFONT.render("종료",True,WHITE)
+msg_end_rect = msg_end.get_rect(center=(WIDTH/2,HEIGHT/2+250))
 def main_menu():
     click = 0
     running = 1
     while running:
-        SCREEN.fill(BLACK)
+        
         for event in pg.event.get():
             if event.type == QUIT:
                 pg.quit()
@@ -600,13 +611,26 @@ def main_menu():
             if play_button.collidepoint((mx, my)):
                 game()
                 click = 0
-    
+            elif end_button.collidepoint((mx,my)):
+                running = 0
+                click = 0
 
-        msg_title = MYFONT.render("game_project",True,WHITE)
-        SCREEN.blit(msg_title,(WIDTH/2,100))
+        SCREEN.blit(BLURRED_BACKGROUDN_IMAGE,(0,0))
+        SCREEN.blit(msg_title,msg_title_rect)
         
-        pg.draw.rect(SCREEN, (255, 0, 0), play_button)
-        
+
+        SCREEN.blit(play_image,play_button)
+        if play_button.collidepoint((mx,my)):
+            SCREEN.blit(msg_play_white,msg_play_rect)      
+        else:
+            SCREEN.blit(msg_play,msg_play_rect)      
+
+        SCREEN.blit(end_image,end_button)
+        if end_button.collidepoint((mx,my)):
+            SCREEN.blit(msg_end_white,msg_end_rect) 
+        else:
+            SCREEN.blit(msg_end,msg_end_rect) 
+
         pg.display.flip()
     
 main_menu()
