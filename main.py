@@ -93,10 +93,18 @@ replay_image = REPLAY_BUTTON
 replay = replay_image.get_rect()
 replay.center = (WIDTH/2-50,HEIGHT/2)
 
-button_image = BUTTON
+defeat_goto_main_image = DEFEAT_MENU_FRAME
 
-goto_mainmenu_defeat = button_image.get_rect()
-goto_mainmenu_defeat.center = (WIDTH/2,HEIGHT/2)
+defeat_goto_main = defeat_goto_main_image.get_rect(center = (WIDTH/2,HEIGHT/2+150))
+
+msg_goto_main = MYFONT.render("메인 메뉴",True,DEEP_PURPLE)
+msg_goto_main_rect = msg_goto_main.get_rect(center = (WIDTH/2,HEIGHT/2+150))
+
+
+msg_defeat = MYFONT.render("YOU DIE",True,WHITE)
+msg_defeat_rect = msg_defeat.get_rect(center=(WIDTH/2,HEIGHT/3))
+
+
 
 upgrade_image = UPGRADE_BUTTON
 upgrade_button = upgrade_image.get_rect()
@@ -124,6 +132,8 @@ coin_rect = coin_image.get_rect()
 
 hp_frame_image = HP_FRAME_IMAGE
 hp_frame = hp_frame_image.get_rect(topright=(WIDTH - HP_FRAME_INTERVAL,HP_FRAME_INTERVAL))
+
+
 #게임
 def game():
     player = sp.Player()
@@ -220,6 +230,37 @@ def game():
             pg.display.flip()
             continue
 
+        if player.hp <= 0:
+            SCREEN.fill(BLACK)
+            if defeat_goto_main.collidepoint((mx, my)):
+                msg_goto_main = MYFONT.render("메인 메뉴",True,WHITE)
+                if click:
+                    reset()
+                    break
+            else:
+                msg_goto_main = MYFONT.render("메인 메뉴",True,DEEP_PURPLE)
+
+
+
+            SCREEN.blit(defeat_goto_main_image,defeat_goto_main)
+            SCREEN.blit(msg_goto_main,msg_goto_main_rect)
+
+            SCREEN.blit(msg_defeat,msg_defeat_rect)
+            msg_time_record = MYFONT.render(f"시간 기록 : {game_sec//60}분 {game_sec}초",True,WHITE)
+            msg_time_record_rect = msg_time_record.get_rect(center=(WIDTH/2,HEIGHT/2))
+            SCREEN.blit(msg_time_record,msg_time_record_rect)
+            msg_gold_record = MYFONT.render(f"총 골드 : {sp.Player.total_gold} 골드",True,WHITE)
+            msg_gold_record_rect = msg_gold_record.get_rect(center=(WIDTH/2,HEIGHT/2+40))
+            SCREEN.blit(msg_gold_record,msg_gold_record_rect)
+            
+            msg_enemy_record = MYFONT.render(f"죽인 적 : {sp.Player.total_killed_enemy} 마리",True,WHITE)
+            msg_enemy_record_rect = msg_enemy_record.get_rect(center=(WIDTH/2,HEIGHT/2+80))
+            SCREEN.blit(msg_enemy_record,msg_enemy_record_rect)
+
+
+            pg.display.flip()
+            continue
+
         #메뉴 실행시
         if menu:
             #어두워진 화면 그리기(스프라이트 업데이트 안함)
@@ -253,20 +294,7 @@ def game():
             pg.display.flip()
             continue
         
-        #플레이어의 체력이 0이하이면 게임 종료
-        if player.hp <= 0:
-            SCREEN.fill(BLACK)
-            if click:
-                if goto_mainmenu_defeat.collidepoint((mx, my)):
-                    reset()
-                    break
 
-            SCREEN.blit(button_image,goto_mainmenu_defeat)
-
-            msg_defeat = MYFONT.render("YOU DIE",True,WHITE)
-            SCREEN.blit(msg_defeat,(WIDTH/2,HEIGHT/3))
-            pg.display.flip()
-            continue
 
         #적 생성
         enemy_spawn(game_sec,player)
@@ -300,20 +328,20 @@ def game():
                 if click:
                     upgrade_sell = 1
                     selected_sprite = building
-
         
         #건물 업데이트 및 판매
         if upgrade_sell:
             upgrade_button.midbottom = selected_sprite.shown_rect.bottomright
             upgrade_button.move_ip(0,60)
             SCREEN.blit(upgrade_image,upgrade_button)
-            if player.gold >= selected_sprite.upgrade_price:
-                msg_upgrade_price = MYFONT.render(str(-selected_sprite.upgrade_price),True,WHITE)
-            else:
-                msg_upgrade_price = MYFONT.render(str(-selected_sprite.upgrade_price),True,RED)
-            msg_upgrade_price_rect = msg_upgrade_price.get_rect(midbottom=selected_sprite.shown_rect.bottomright)
-            msg_upgrade_price_rect.move_ip(0,90)
-            SCREEN.blit(msg_upgrade_price,msg_upgrade_price_rect)
+            if selected_sprite.upgrade_price:
+                if player.gold >= selected_sprite.upgrade_price:
+                    msg_upgrade_price = MYFONT.render(str(-selected_sprite.upgrade_price),True,WHITE)
+                else:
+                    msg_upgrade_price = MYFONT.render(str(-selected_sprite.upgrade_price),True,RED)
+                msg_upgrade_price_rect = msg_upgrade_price.get_rect(midbottom=selected_sprite.shown_rect.bottomright)
+                msg_upgrade_price_rect.move_ip(0,90)
+                SCREEN.blit(msg_upgrade_price,msg_upgrade_price_rect)
             
             sell_button.midbottom = selected_sprite.shown_rect.bottomleft
             sell_button.move_ip(0,60)
@@ -384,12 +412,9 @@ def game():
         msg_exp = MYFONT.render(f"경험치 : {player.exp}/{player.reqired_exp}",True,WHITE)
         SCREEN.blit(msg_exp,(10,130))
 
-        #총 골드 표시
-        msg_total_gold = MYFONT.render(f"총 골드 : {player.total_gold}",True,WHITE)
-        SCREEN.blit(msg_total_gold,(10,170))
         #fps 표시(선택)
         msg_fps = MYFONT.render(f"fps : {int((CLOCK.get_fps()))}",True,WHITE)
-        SCREEN.blit(msg_fps,(10,210))
+        SCREEN.blit(msg_fps,(10,170))
         
         pg.display.flip()
 
@@ -430,6 +455,10 @@ mortar_rect = MORTAR_IMAGE.get_rect()
 mortar_green = fill(MORTAR_IMAGE,GREEN)
 mortar_red = fill(MORTAR_IMAGE,RED)
 
+bomber_button = building_frame.get_rect(center=(925,HEIGHT-150))
+bomber_rect = BOMBER_IMAGE.get_rect()
+bomber_green = fill(BOMBER_IMAGE,GREEN)
+bomber_red = fill(BOMBER_IMAGE,RED)
 def build(camera,player):
     running = 1
     click = 0
@@ -521,6 +550,21 @@ def build(camera,player):
                             player.gold -= sp.Mortar.price[0]
                         else:
                             sp.Message("골드가 충분하지 않습니다.",RED)
+        elif selected == "bomber":
+            if not bomber_button.collidepoint((mx,my)):
+                bomber_rect.center = (mx,my)
+                if collision_check(bomber_rect,camera):
+                    SCREEN.blit(bomber_red,bomber_rect.topleft)
+                    if not click:
+                        sp.Message("여기에 건물을 설치할 수 없습니다.",RED)
+                else:
+                    SCREEN.blit(bomber_green,bomber_rect.topleft)
+                    if not click:
+                        if player.gold >= sp.Bomber.price[0]:
+                            sp.Bomber(pg.math.Vector2(mx+camera.offset.x,516),player)
+                            player.gold -= sp.Bomber.price[0]
+                        else:
+                            sp.Message("골드가 충분하지 않습니다.",RED)
         if click:
             if exit_button.collidepoint((mx,my)):
                 if not selected:
@@ -533,26 +577,47 @@ def build(camera,player):
                 selected = "mine"
             elif mortar_button.collidepoint((mx,my)):
                 selected = "mortar"
-            
+            elif bomber_button.collidepoint((mx,my)):
+                selected = "bomber"
         else:
             selected = ""
 
         SCREEN.blit(exit_image,exit_button)        
         SCREEN.blit(building_frame,wall_button)
         blit_text(wall_button,"장벽",wall_button.height/4,DEEP_PURPLE)
-        blit_text(wall_button,f"{sp.Wall.price[0]} 골드",wall_button.height/4*3,DEEP_PURPLE)
+        if player.gold >= sp.Wall.price[0]:
+            blit_text(wall_button,f"{sp.Wall.price[0]} 골드",wall_button.height/4*3,DEEP_PURPLE)
+        else:
+            blit_text(wall_button,f"{sp.Wall.price[0]} 골드",wall_button.height/4*3,RED)
+            
 
         SCREEN.blit(building_frame,canon_button)
         blit_text(canon_button,"대포",canon_button.height/4,DEEP_PURPLE)
-        blit_text(canon_button,f"{sp.Canon.price[0]} 골드",canon_button.height/4*3,DEEP_PURPLE)
+        if player.gold >= sp.Canon.price[0]:
+            blit_text(canon_button,f"{sp.Canon.price[0]} 골드",canon_button.height/4*3,DEEP_PURPLE)
+        else:
+            blit_text(canon_button,f"{sp.Canon.price[0]} 골드",canon_button.height/4*3,RED)
 
         SCREEN.blit(building_frame,mine_button)
         blit_text(mine_button,"광산",mine_button.height/4,DEEP_PURPLE)
-        blit_text(mine_button,f"{sp.Mine.price[0]} 골드",mine_button.height/4*3,DEEP_PURPLE)
+        if player.gold >= sp.Mine.price[0]:
+            blit_text(mine_button,f"{sp.Mine.price[0]} 골드",mine_button.height/4*3,DEEP_PURPLE)
+        else:
+            blit_text(mine_button,f"{sp.Mine.price[0]} 골드",mine_button.height/4*3,RED)
 
         SCREEN.blit(building_frame,mortar_button)
         blit_text(mortar_button,"박격포",mortar_button.height/4,DEEP_PURPLE)
-        blit_text(mortar_button,f"{sp.Mortar.price[0]} 골드",mortar_button.height/4*3,DEEP_PURPLE)
+        if player.gold >= sp.Mortar.price[0]:
+            blit_text(mortar_button,f"{sp.Mortar.price[0]} 골드",mortar_button.height/4*3,DEEP_PURPLE)
+        else:
+            blit_text(mortar_button,f"{sp.Mortar.price[0]} 골드",mortar_button.height/4*3,RED)
+
+        SCREEN.blit(building_frame,bomber_button)
+        blit_text(bomber_button,"폭탄 투척기",mortar_button.height/4,DEEP_PURPLE)
+        if player.gold >= sp.Bomber.price[0]:
+            blit_text(bomber_button,f"{sp.Bomber.price[0]} 골드",bomber_button.height/4*3,DEEP_PURPLE)
+        else:
+            blit_text(bomber_button,f"{sp.Mortar.price[0]} 골드",bomber_button.height/4*3,RED)
 
         if wall_button.collidepoint((mx,my)):
             SCREEN.blit(outline_building_frame,wall_button)
@@ -565,6 +630,8 @@ def build(camera,player):
             
         elif mortar_button.collidepoint((mx,my)):
             SCREEN.blit(outline_building_frame,mortar_button)
+        elif bomber_button.collidepoint((mx,my)):
+            SCREEN.blit(outline_building_frame,bomber_button)
         #현재 골드 표시
         msg_gold = MYFONT.render("골드 : {}".format(player.gold),True,WHITE)
         SCREEN.blit(msg_gold,(10,10))
@@ -587,6 +654,8 @@ end_button = end_image.get_rect(center=(WIDTH/2,HEIGHT/2+250))
 msg_end = MYFONT.render("종료",True,DEEP_PURPLE)
 msg_end_white = MYFONT.render("종료",True,WHITE)
 msg_end_rect = msg_end.get_rect(center=(WIDTH/2,HEIGHT/2+250))
+
+
 def main_menu():
     click = 0
     running = 1
@@ -621,15 +690,15 @@ def main_menu():
 
         SCREEN.blit(play_image,play_button)
         if play_button.collidepoint((mx,my)):
-            SCREEN.blit(msg_play_white,msg_play_rect)      
+            SCREEN.blit(msg_play_white,msg_play_rect)
         else:
-            SCREEN.blit(msg_play,msg_play_rect)      
+            SCREEN.blit(msg_play,msg_play_rect)
 
         SCREEN.blit(end_image,end_button)
         if end_button.collidepoint((mx,my)):
-            SCREEN.blit(msg_end_white,msg_end_rect) 
+            SCREEN.blit(msg_end_white,msg_end_rect)
         else:
-            SCREEN.blit(msg_end,msg_end_rect) 
+            SCREEN.blit(msg_end,msg_end_rect)
 
         pg.display.flip()
     

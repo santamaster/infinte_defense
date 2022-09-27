@@ -79,11 +79,11 @@ GROUND_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\ground.png")
 HP_FRAME_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\hp_bar_frame.png").convert_alpha(),(HP_FRAME_WIDTH,HP_FRAME_HEIGHT))
 MENU_FRAME = pg.transform.scale(pg.image.load("resources\\images\\menu_frame.png").convert_alpha(),(250,100))
 PLAY_FRAME = MENU_FRAME.copy()
+DEFEAT_MENU_FRAME = pg.transform.scale(pg.image.load("resources\\images\\menu_frame.png").convert_alpha(),(200,80))
 ABILITY_FRAME = pg.transform.scale(pg.image.load("resources\\images\\ability_frame.png").convert_alpha(),(300,500))
 OUTLINE_ABILITY_FRAME = get_outline(ABILITY_FRAME)
 BUILDING_FRAME = pg.transform.scale(pg.image.load("resources\\images\\ability_frame.png").convert_alpha(),(120,200))
 OUTLINE_BUILDING_FRAME = get_outline(BUILDING_FRAME)
-BUTTON = pg.image.load("resources\\images\\button.png").convert_alpha()
 UPGRADE_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\upgrade.png").convert_alpha(),(50,50))
 SELL_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\sell.png").convert_alpha(),(50,50))
 BUILD_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\build.png").convert_alpha(),(100,100))
@@ -119,8 +119,20 @@ CANONSHOT_IMAGE = pg.image.load("resources\\images\\canonshot.png").convert_alph
 MORTAR_IMAGE_SIZE = (100,150)
 MORTAR_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mortar.png").convert_alpha(),MORTAR_IMAGE_SIZE)
 OUTLINE_MORTAR = get_outline(MORTAR_IMAGE)
-MORTARSHOT_IMAGE = pg.image.load("resources\\images\\canonshot.png").convert_alpha()
+MORTARSHOT_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\canonshot.png").convert_alpha(),(50,50))
 FIRE_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\fire.png").convert_alpha(),(300,100))
+
+#BOMBER
+BOMBER_IMAGE_SIZE = (100,150)
+BOMBER_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mortar.png").convert_alpha(),BOMBER_IMAGE_SIZE)
+BOMBER_IMAGE_L = pg.transform.flip(BOMBER_IMAGE,True,False)
+OUTLINE_BOMBER = get_outline(BOMBER_IMAGE)
+OUTLINE_BOMBER_L = get_outline(BOMBER_IMAGE_L)
+
+BOMBERSHOT_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\canonshot.png").convert_alpha(),(20,20))
+
+
+
 #MINE
 MINE_IMAGE_SIZE = (150,100)
 MINE_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mine.png").convert_alpha(),MINE_IMAGE_SIZE)

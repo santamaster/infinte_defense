@@ -15,6 +15,7 @@ wall_sprites = pg.sprite.Group()
 mine_sprites = pg.sprite.Group()
 canon_sprites = pg.sprite.Group()
 mortar_sprites = pg.sprite.Group()
+bomber_sprites = pg.sprite.Group()
 #게임 플레이에 영향을 미치지 않는 스프라이트 그룹
 effect_sprites = pg.sprite.Group()
 message_sprites = pg.sprite.Group()
@@ -29,6 +30,8 @@ class Player(pg.sprite.Sprite):
     gold_cooldown = 1* FPS
     gold_output = 3
     start_gold = 1000
+    total_gold = start_gold
+    total_killed_enemy = 0
     def __init__(self):
         super().__init__()
         all_sprites.add(self)
@@ -48,7 +51,6 @@ class Player(pg.sprite.Sprite):
         self.jump_vel = 0
         self.jump_pw = 0
         self.gold = Player.start_gold
-        self.total_gold = Player.start_gold
         self.gold_output = Player.gold_output
         self.gold_cooldown = Player.gold_cooldown
         self.gold_counter = 0
@@ -83,7 +85,7 @@ class Player(pg.sprite.Sprite):
         self.gold_counter += 1
         if self.gold_counter >= self.gold_cooldown:
             self.gold_counter = 0
-            self.total_gold += self.gold_output
+            Player.total_gold += self.gold_output
             self.gold += self.gold_output
         if self.hp <= 0:
             self.kill()
@@ -179,9 +181,12 @@ class Enemy(pg.sprite.Sprite):
         if self.hp <= 0:
             if Enemy.get_gold:
                 self.player.gold +=5
+                Player.gold +=5
                 Earn_gold_effect(self)
             self.player.get_exp(self.exp)
             self.kill()
+            Player.total_killed_enemy += 1
+
         
 #좀비
 class Zombie(Enemy):
@@ -226,6 +231,7 @@ class Zombie(Enemy):
                 Earn_gold_effect(self)
             self.player.get_exp(self.exp)
             self.kill()
+            Player.total_killed_enemy += 1
 
 class Skeleton(Enemy):
     hp = [60,120,150]
@@ -320,6 +326,8 @@ class Arrow(pg.sprite.Sprite):
         self.vector.y -= self.delta_y
         self.delta_y -=self.delta_square_y
         self.rect.midbottom = self.vector
+        if self.vector.y >= 516:
+            self.kill()
     def update(self):
         self.move()
         self.attack()
@@ -398,6 +406,7 @@ class Wall(Building):
             self.kill()
         if Wall.self_healing:
             self.self_heal()
+
 #대포
 class Canon(Building):
     price = [300,400,500]
@@ -488,8 +497,6 @@ class Canon(Building):
                     self.double_barrel_counter = 0
                     self.double_barrel = 0
             
-        
-
 
     def upgrade(self):
         if self.level < Canon.max_level:
@@ -507,7 +514,6 @@ class Canon(Building):
         if self.hp <= 0:
             self.kill()
         self.rect.midbottom = self.vector
-
 
 #포탄
 class CanonShot(pg.sprite.Sprite):
@@ -548,6 +554,7 @@ class CanonShot(pg.sprite.Sprite):
 
 class Mortar(Building):
     attack_range = 1200
+    least_attack_range = 500
     first_attack_cooldown = 1*FPS
     attack_cooldown = 3*FPS
     first_attack_cooldown_reduction = 1
@@ -584,7 +591,7 @@ class Mortar(Building):
     def attack(self):
         #사거리 안에 있는 적
         enemy_in_range = [ sprite for sprite in enemy_sprites.sprites() \
-                if abs(sprite.vector.x - self.vector.x) <= Mortar.attack_range]
+                if Mortar.least_attack_range < abs(sprite.vector.x - self.vector.x) < Mortar.attack_range]
 
         if enemy_in_range:
             #사거리 안에 있는 적들 중 가장 가까운 적
@@ -631,7 +638,7 @@ class MortarShot(pg.sprite.Sprite):
         self.start_point = pg.math.Vector2(start_point)
         self.end_point = pg.math.Vector2(end_point)
         self.attack_dmg = damage        
-        self.image = CANONSHOT_IMAGE
+        self.image = MORTARSHOT_IMAGE
         self.rect = self.image.get_rect()
         self.rect.midbottom = self.vector
         self.shown_rect = self.rect.copy()
@@ -690,10 +697,122 @@ class FireZone(pg.sprite.Sprite):
             self.kill()
         self.rect.midbottom = self.vector
 
+#폭탄 투척기
+class Bomber(Building):
+    hp = [400,500,600]
+    max_level = 3
+    price = [400,500,600]
+    attack_dmg = [20,25,30]
+    hp_bar_width = 150
+    attack_range = 500
+    first_attack_cooldown = 0.1*FPS
+    attack_cooldown = 0.5*FPS
+    damage_rate = 1
+    def __init__(self,vector,player):
+        super().__init__(player)
+        bomber_sprites.add(self)
+        self.level = 1
+        self.max_level = Bomber.max_level
+        self.max_hp = Bomber.hp[self.level-1]
+        self.hp = Bomber.hp[self.level-1]
+        self.attack_dmg = Bomber.attack_dmg[self.level-1]
+        self.vector = vector
+        if self.vector.x >= BG_WIDTH/2:
+            self.image = BOMBER_IMAGE
+            self.outline_image = OUTLINE_BOMBER
+        else:
+            self.image = BOMBER_IMAGE_L
+            self.outline_image = OUTLINE_BOMBER_L
+        self.rect = self.image.get_rect()
+        self.shown_rect = self.rect.copy()
+        self.rect.midbottom = self.vector
+        self.attack_counter = 0
+        self.first_attack_counter = 0
+        self.first_attack = 0
+        self.price = Bomber.price[self.level-1]
+        self.upgrade_price = Bomber.price[self.level]
+        self.hp_bar = Hp_bar(self,Bomber.hp_bar_width)
+    def attack(self):
+        #사거리 안에 있는 적
+        enemy_in_range = [ sprite for sprite in enemy_sprites.sprites() \
+                if abs(sprite.vector.x - self.vector.x) < Bomber.attack_range]
 
+        if enemy_in_range:
+            #사거리 안에 있는 적들 중 가장 가까운 적
+            target = sorted(enemy_in_range,key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
+            if target.vector.x - self.vector.x >=0:
+                self.image = BOMBER_IMAGE
+                self.outline_image = OUTLINE_BOMBER
+            else:
+                self.image = BOMBER_IMAGE_L
+                self.outline_image = OUTLINE_BOMBER_L
+            if not self.first_attack:
+                self.first_attack_counter +=1
+                if self.first_attack_counter >= Bomber.first_attack_cooldown:
+                    self.first_attack = 1
+                    BomberShot(self.attack_dmg*Bomber.damage_rate,self.vector,target.vector)
+            else:
+                self.attack_counter += 1
+                if self.attack_counter >= Bomber.attack_cooldown:
+                    self.attack_counter = 0
+                    BomberShot(self.attack_dmg*Bomber.damage_rate,self.vector,target.vector)
 
+        else:
+            self.first_attack_counter = 0
+            self.attack_counter = 0
+            self.first_attack = 0
     
+    def upgrade(self):
+        if self.level < Bomber.max_level:
+            self.level += 1
+            self.max_hp = Bomber.hp[self.level-1]
+            self.hp = Bomber.hp[self.level-1]
+            self.price = Bomber.price[self.level-1]
+            self.attack_dmg = Bomber.attack_dmg[self.level-1]
+            if self.level == Bomber.max_level:
+                self.upgrade_price = None
+            else:
+                self.upgrade_price = Bomber.price[self.level]
+    def update(self):
+        self.attack()
+        if self.hp <= 0:
+            self.kill()
 
+
+class BomberShot(pg.sprite.Sprite):
+    time = 0.5*FPS
+    def __init__(self,damage,start_point,end_point):
+        super().__init__()
+        all_sprites.add(self)
+        noncreature_sprites.add(self)
+        self.vector = pg.math.Vector2(start_point)
+        self.vector.y -= 100
+        self.start_point = pg.math.Vector2(start_point)
+        self.end_point = pg.math.Vector2(end_point)
+        self.attack_dmg = damage        
+        self.image = BOMBERSHOT_IMAGE
+        self.rect = self.image.get_rect()
+        self.rect.midbottom = self.vector
+        self.shown_rect = self.rect.copy()
+        self.delta_x = (self.end_point.x-self.start_point.x)/BomberShot.time
+        self.delta_y = -100/BomberShot.time
+    def attack(self):
+        if self.vector.y > self.start_point.y:
+            collided_sprite = pg.sprite.spritecollide(self,enemy_sprites,False)
+            if collided_sprite:
+                for sprite in collided_sprite:
+                    sprite.hp -= self.attack_dmg
+            self.kill()
+    def move(self):
+        self.vector.x += self.delta_x
+        self.vector.y -= self.delta_y
+        self.rect.midbottom = self.vector
+
+    def update(self):
+        self.move()
+        self.attack()
+
+#광산
 class Mine(Building):
     hp = [300,400,600]
     max_level = 3
@@ -726,7 +845,7 @@ class Mine(Building):
         self.mining_counter += 1
         if self.mining_counter >= self.gold_cooldown*Mine.gold_cooldown_rate:
             self.player.gold += self.gold_output
-            self.player.total_gold += self.gold_output
+            Player.total_gold += self.gold_output
             self.mining_counter = 0
             Earn_gold_effect(self)
             
@@ -745,7 +864,8 @@ class Mine(Building):
         if self.hp <= 0:
             self.kill()
         self.mining()
-        
+
+
 
 #건물 및 적 체력(각 스프라이트에 종속되어 있음)
 class Hp_bar(pg.sprite.Sprite):
