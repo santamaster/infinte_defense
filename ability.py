@@ -117,19 +117,25 @@ def mine_faster():
 
 
 
+player_ability_list = []
+
 level_2_ability = [canon_increase_damage,canon_enhanced_attack,canon_infite_range,double_barrel,get_gold_when_kill_enemy,building_gold]
 def get_level_2_ability():
-    # if len(sp.mine_sprites) >= 2:
-    #     level_2_ability.append(mine_faster)
-    # if len(sp.wall_sprites) >= 2:
-    #     level_2_ability.append(wall_self_healing)
-    #     level_2_ability.append(attacking_wall)
+    if len(sp.mine_sprites) >= 2:
+        level_2_ability.append(mine_faster)
+    if len(sp.wall_sprites) >= 2:
+        level_2_ability.append(wall_self_healing)
+        level_2_ability.append(attacking_wall)
     pass
-level_2_ability = [canon_increase_damage,canon_enhanced_attack,fast_shot]
 
 level_3_ability = [canon_increase_damage,canon_enhanced_attack,mine_faster]
 def get_level_3_ability():
-    pass
+
+    #겹치는 능력 제거
+    for ability in player_ability_list:
+        if ability in level_3_ability:
+            level_3_ability.remove(ability)
+
 
 level_4_ability = [canon_increase_damage,canon_enhanced_attack,mine_faster]
 def get_level_4_ability():
@@ -138,6 +144,11 @@ def get_level_4_ability():
         if player.hp/player.max_hp <= 0.5:
             level_4_ability.append(player_health_recovery)
 
+    #겹치는 능력 제거
+    for ability in player_ability_list:
+        if ability in level_4_ability:
+            level_4_ability.remove(ability)
+
 level_5_ability = [canon_increase_damage,canon_enhanced_attack,mine_faster]
 def get_level_5_ability():
     #플레이어 체력이 50% 이하일 때
@@ -145,12 +156,23 @@ def get_level_5_ability():
         if player.hp/player.max_hp <= 0.5:
             level_5_ability.append(player_health_recovery)
 
+
+    #겹치는 능력 제거
+    for ability in player_ability_list:
+        if ability in level_5_ability:
+            level_5_ability.remove(ability)
+
 level_6_ability = [canon_increase_damage,canon_enhanced_attack,mine_faster]
 def get_level_6_ability():
     #플레이어 체력이 50% 이하일 때
     for player in sp.player_sprites:
         if player.hp/player.max_hp <= 0.5:
             level_6_ability.append(player_health_recovery)
+
+    #겹치는 능력 제거
+    for ability in player_ability_list:
+        if ability in level_6_ability:
+            level_6_ability.remove(ability)
 
 ability_info = {player_health_recovery:["체력 회복","플레이어의 체력을 최대로 회복합니다"],\
                 get_gold:["일확천금","1000골드를 획득합니다"],\

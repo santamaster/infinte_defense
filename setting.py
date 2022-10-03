@@ -89,7 +89,15 @@ SELL_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\sell.png").co
 BUILD_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\build.png").convert_alpha(),(100,100))
 REPLAY_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\replay.png").convert_alpha(),(50,50))
 GOTO_MAIN_MENU_BUTTON =pg.transform.scale(pg.image.load("resources\\images\\exit.png").convert_alpha(),(50,50))
-PLAYER_IMAGE = pg.image.load("resources\\images\\player.png").convert_alpha()
+PLAYER_IMAGE_SIZE = (128,128)
+PLAYER_IMAGE_SPEED = 8/FPS
+PLAYER_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\player1.png").convert_alpha(),PLAYER_IMAGE_SIZE)
+PLAYER_IMAGES =set_size(PLAYER_IMAGE_SIZE,\
+    *[pg.image.load("resources\\images\\player{}.png".format(i)).convert_alpha() for i in range(2,3+1)])
+
+PLAYER_IMAGE_L = pg.transform.flip(PLAYER_IMAGE,True,False)
+PLAYER_IMAGES_L = [pg.transform.flip(image,True,False) for image in PLAYER_IMAGES]
+
 COIN_IMAGE = pg.image.load("resources\\images\\gold1.png").convert_alpha()
 
 #ZOMBIE
@@ -113,23 +121,26 @@ CANON_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\canon.png").c
 CANON_IMAGE_L = pg.transform.flip(CANON_IMAGE,True,False)
 OUTLINE_CANON = get_outline(CANON_IMAGE)
 OUTLINE_CANON_L = get_outline(CANON_IMAGE_L)
-CANONSHOT_IMAGE = pg.image.load("resources\\images\\canonshot.png").convert_alpha()
+CANONSHOT_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\canonshot.png").convert_alpha(),(32,32))
 
 #MORTAR
 MORTAR_IMAGE_SIZE = (100,150)
 MORTAR_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mortar.png").convert_alpha(),MORTAR_IMAGE_SIZE)
 OUTLINE_MORTAR = get_outline(MORTAR_IMAGE)
 MORTARSHOT_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\canonshot.png").convert_alpha(),(50,50))
-FIRE_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\fire.png").convert_alpha(),(300,100))
+FIRE_IMAGE_SPEED = 12/FPS
+FIRE_IMAGE_SIZE = (300,100)
+FIRE_IMAGES = set_size(FIRE_IMAGE_SIZE,\
+    *[pg.image.load("resources\\images\\fire{}.png".format(i)).convert_alpha() for i in range(1,5)])
 
-#BOMBER
-BOMBER_IMAGE_SIZE = (100,150)
-BOMBER_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mortar.png").convert_alpha(),BOMBER_IMAGE_SIZE)
-BOMBER_IMAGE_L = pg.transform.flip(BOMBER_IMAGE,True,False)
-OUTLINE_BOMBER = get_outline(BOMBER_IMAGE)
-OUTLINE_BOMBER_L = get_outline(BOMBER_IMAGE_L)
+#FIREBALL_THROWER
+FIREBALL_THROWER_IMAGE_SIZE = (100,150)
+FIREBALL_THROWER_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mortar.png").convert_alpha(),FIREBALL_THROWER_IMAGE_SIZE)
+FIREBALL_THROWER_IMAGE_L = pg.transform.flip(FIREBALL_THROWER_IMAGE,True,False)
+OUTLINE_FIREBALL_THROWER = get_outline(FIREBALL_THROWER_IMAGE)
+OUTLINE_FIREBALL_THROWER_L = get_outline(FIREBALL_THROWER_IMAGE_L)
 
-BOMBERSHOT_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\canonshot.png").convert_alpha(),(20,20))
+FIREBALL_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\fireball.png").convert_alpha(),(20,20))
 
 
 

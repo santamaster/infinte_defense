@@ -15,7 +15,7 @@ wall_sprites = pg.sprite.Group()
 mine_sprites = pg.sprite.Group()
 canon_sprites = pg.sprite.Group()
 mortar_sprites = pg.sprite.Group()
-bomber_sprites = pg.sprite.Group()
+fireball_thrower_sprites = pg.sprite.Group()
 #게임 플레이에 영향을 미치지 않는 스프라이트 그룹
 effect_sprites = pg.sprite.Group()
 message_sprites = pg.sprite.Group()
@@ -42,6 +42,11 @@ class Player(pg.sprite.Sprite):
         self.max_hp = Player.hp
         self.hp = Player.hp
         self.vector = pg.math.Vector2(BG_WIDTH/2,516)
+        self.images = PLAYER_IMAGES
+        self.images_l = PLAYER_IMAGES_L
+        self.image_counter = 0
+        self.image_count = len(self.images)
+        self.image_speed = PLAYER_IMAGE_SPEED
         self.image = PLAYER_IMAGE
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
@@ -57,19 +62,42 @@ class Player(pg.sprite.Sprite):
         self.level = 1
         self.exp = 0
         self.reqired_exp = Player.required_exp[self.level-1]
+        self.direction = "right"
     def move(self):
         #키 입력에 따른 플레이어 이동
         keys = pg.key.get_pressed()
         if keys[K_d] and self.rect.right <= BG_WIDTH:#오른쪽
             self.vector.x += self.vel
-        if keys[K_a] and self.rect.left >= 0:#왼쪽
+            if self.image_counter >= self.image_count-1:
+                self.image_counter = 0
+            else:
+                self.image_counter +=self.image_speed
+                self.image = self.images[int(self.image_counter)]
+            self.direction = "right"
+        elif keys[K_a] and self.rect.left >= 0:#왼쪽
             self.vector.x -= self.vel
+            if self.image_counter >= self.image_count-1:
+                self.image_counter = 0
+            else:
+                self.image_counter +=self.image_speed
+                self.image = self.images_l[int(self.image_counter)]
+            self.direction = "left"
+        else:
+            self.image_counter = 0
+            if self.direction == "right":
+                self.image = PLAYER_IMAGE
+            elif self.direction =="left":
+                self.image = PLAYER_IMAGE_L
         #점프 구현
         if keys[K_w]:
             if not self.jumping: #만약 jumping이 False라면
                 self.jumping = True
                 self.jump_pw = PLAYER_JUMP_PW
                 self.jump_vel = self.jump_pw/2 * GRAVITY
+            if self.direction == "right":
+                self.image = PLAYER_IMAGE
+            elif self.direction == "left":
+                self.image = PLAYER_IMAGE_L
         if self.jump_pw: #만약 jump_vel이 0이 아니라면
             self.vector.y -= self.jump_vel
             self.jump_vel -= GRAVITY
@@ -181,7 +209,7 @@ class Enemy(pg.sprite.Sprite):
         if self.hp <= 0:
             if Enemy.get_gold:
                 self.player.gold +=5
-                Player.gold +=5
+                Player.total_gold +=5
                 Earn_gold_effect(self)
             self.player.get_exp(self.exp)
             self.kill()
@@ -648,13 +676,13 @@ class MortarShot(pg.sprite.Sprite):
         self.delta_square_y = self.power/(MortarShot.time/2)
         self.lavashot = lavashot
     def attack(self):
-        if self.vector.y > self.start_point.y:
+        if self.vector.y > 516:
             collided_sprite = pg.sprite.spritecollide(self,enemy_sprites,False)
             if collided_sprite:
                 for sprite in collided_sprite:
                     sprite.hp -= self.attack_dmg
             if self.lavashot:
-                FireZone(self.vector,8,3*FPS)
+                FireZone((self.vector.x,516),8,3*FPS)
             self.kill()
     def move(self):
         self.vector.x += self.delta_x
@@ -673,8 +701,12 @@ class FireZone(pg.sprite.Sprite):
         all_sprites.add(self)
         noncreature_sprites.add(self)
         self.attack_dmg = damage
-        self.vector = vector
-        self.image = FIRE_IMAGE
+        self.vector = pg.math.Vector2(vector)
+        self.images = FIRE_IMAGES
+        self.image_counter = 0
+        self.image_count = len(self.images)
+        self.image_speed = FIRE_IMAGE_SPEED
+        self.image = self.images[0]
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
         self.rect.midbottom = self.vector
@@ -696,9 +728,14 @@ class FireZone(pg.sprite.Sprite):
         if self.duration_counter >= self.duration:
             self.kill()
         self.rect.midbottom = self.vector
+        if self.image_counter >=self.image_count-1:
+            self.image_counter = 0
+        else:
+            self.image_counter += self.image_speed
+        self.image = self.images[int(self.image_counter)]
 
-#폭탄 투척기
-class Bomber(Building):
+#화염구 투척기
+class FireballThrower(Building):
     hp = [400,500,600]
     max_level = 3
     price = [400,500,600]
@@ -710,52 +747,52 @@ class Bomber(Building):
     damage_rate = 1
     def __init__(self,vector,player):
         super().__init__(player)
-        bomber_sprites.add(self)
+        fireball_thrower_sprites.add(self)
         self.level = 1
-        self.max_level = Bomber.max_level
-        self.max_hp = Bomber.hp[self.level-1]
-        self.hp = Bomber.hp[self.level-1]
-        self.attack_dmg = Bomber.attack_dmg[self.level-1]
+        self.max_level = FireballThrower.max_level
+        self.max_hp = FireballThrower.hp[self.level-1]
+        self.hp = FireballThrower.hp[self.level-1]
+        self.attack_dmg = FireballThrower.attack_dmg[self.level-1]
         self.vector = vector
         if self.vector.x >= BG_WIDTH/2:
-            self.image = BOMBER_IMAGE
-            self.outline_image = OUTLINE_BOMBER
+            self.image = FIREBALL_THROWER_IMAGE
+            self.outline_image = OUTLINE_FIREBALL_THROWER
         else:
-            self.image = BOMBER_IMAGE_L
-            self.outline_image = OUTLINE_BOMBER_L
+            self.image = FIREBALL_THROWER_IMAGE_L
+            self.outline_image = OUTLINE_FIREBALL_THROWER_L
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
         self.rect.midbottom = self.vector
         self.attack_counter = 0
         self.first_attack_counter = 0
         self.first_attack = 0
-        self.price = Bomber.price[self.level-1]
-        self.upgrade_price = Bomber.price[self.level]
-        self.hp_bar = Hp_bar(self,Bomber.hp_bar_width)
+        self.price = FireballThrower.price[self.level-1]
+        self.upgrade_price = FireballThrower.price[self.level]
+        self.hp_bar = Hp_bar(self,FireballThrower.hp_bar_width)
     def attack(self):
         #사거리 안에 있는 적
         enemy_in_range = [ sprite for sprite in enemy_sprites.sprites() \
-                if abs(sprite.vector.x - self.vector.x) < Bomber.attack_range]
+                if abs(sprite.vector.x - self.vector.x) < FireballThrower.attack_range]
 
         if enemy_in_range:
             #사거리 안에 있는 적들 중 가장 가까운 적
             target = sorted(enemy_in_range,key = lambda sprite: abs(sprite.vector.x - self.vector.x))[0]
             if target.vector.x - self.vector.x >=0:
-                self.image = BOMBER_IMAGE
-                self.outline_image = OUTLINE_BOMBER
+                self.image = FIREBALL_THROWER_IMAGE
+                self.outline_image = OUTLINE_FIREBALL_THROWER
             else:
-                self.image = BOMBER_IMAGE_L
-                self.outline_image = OUTLINE_BOMBER_L
+                self.image = FIREBALL_THROWER_IMAGE_L
+                self.outline_image = OUTLINE_FIREBALL_THROWER_L
             if not self.first_attack:
                 self.first_attack_counter +=1
-                if self.first_attack_counter >= Bomber.first_attack_cooldown:
+                if self.first_attack_counter >= FireballThrower.first_attack_cooldown:
                     self.first_attack = 1
-                    BomberShot(self.attack_dmg*Bomber.damage_rate,self.vector,target.vector)
+                    Fireball(self.attack_dmg*FireballThrower.damage_rate,self.vector,target.vector)
             else:
                 self.attack_counter += 1
-                if self.attack_counter >= Bomber.attack_cooldown:
+                if self.attack_counter >= FireballThrower.attack_cooldown:
                     self.attack_counter = 0
-                    BomberShot(self.attack_dmg*Bomber.damage_rate,self.vector,target.vector)
+                    Fireball(self.attack_dmg*FireballThrower.damage_rate,self.vector,target.vector)
 
         else:
             self.first_attack_counter = 0
@@ -763,23 +800,23 @@ class Bomber(Building):
             self.first_attack = 0
     
     def upgrade(self):
-        if self.level < Bomber.max_level:
+        if self.level < FireballThrower.max_level:
             self.level += 1
-            self.max_hp = Bomber.hp[self.level-1]
-            self.hp = Bomber.hp[self.level-1]
-            self.price = Bomber.price[self.level-1]
-            self.attack_dmg = Bomber.attack_dmg[self.level-1]
-            if self.level == Bomber.max_level:
+            self.max_hp = FireballThrower.hp[self.level-1]
+            self.hp = FireballThrower.hp[self.level-1]
+            self.price = FireballThrower.price[self.level-1]
+            self.attack_dmg = FireballThrower.attack_dmg[self.level-1]
+            if self.level == FireballThrower.max_level:
                 self.upgrade_price = None
             else:
-                self.upgrade_price = Bomber.price[self.level]
+                self.upgrade_price = FireballThrower.price[self.level]
     def update(self):
         self.attack()
         if self.hp <= 0:
             self.kill()
 
 
-class BomberShot(pg.sprite.Sprite):
+class Fireball(pg.sprite.Sprite):
     time = 0.5*FPS
     def __init__(self,damage,start_point,end_point):
         super().__init__()
@@ -790,12 +827,12 @@ class BomberShot(pg.sprite.Sprite):
         self.start_point = pg.math.Vector2(start_point)
         self.end_point = pg.math.Vector2(end_point)
         self.attack_dmg = damage        
-        self.image = BOMBERSHOT_IMAGE
+        self.image = FIREBALL_IMAGE
         self.rect = self.image.get_rect()
         self.rect.midbottom = self.vector
         self.shown_rect = self.rect.copy()
-        self.delta_x = (self.end_point.x-self.start_point.x)/BomberShot.time
-        self.delta_y = -100/BomberShot.time
+        self.delta_x = (self.end_point.x-self.start_point.x)/Fireball.time
+        self.delta_y = -100/Fireball.time
     def attack(self):
         if self.vector.y > self.start_point.y:
             collided_sprite = pg.sprite.spritecollide(self,enemy_sprites,False)

@@ -36,20 +36,35 @@ def enemy_spawn(game_sec,player):
     #시간이 지날수록 적이 더 빨리 나옴
     if game_sec <= 30:      #30초 이내
         if random()*FPS <= 0.2:  #1초당 0.1마리
-            sp.Zombie(choice(spawn_location),player)
-            sp.Skeleton(choice(spawn_location),player)
+            if random() >= 0.5:
+                sp.Zombie(choice(spawn_location),player)
+            else:
+                sp.Skeleton(choice(spawn_location),player)
     elif game_sec <= 60:    #30~60초
         if random()*FPS <= 0.3:  #1초당 0.2마리
-            sp.Zombie(choice(spawn_location),player)
-            sp.Skeleton(choice(spawn_location),player)
+            if random() >= 0.5:
+                sp.Zombie(choice(spawn_location),player)
+            else:
+                sp.Skeleton(choice(spawn_location),player)
     elif game_sec <= 120:   #60~120초
         if random()*FPS <= 0.5:  #1초당 0.5마리
-            sp.Zombie(choice(spawn_location),player)
-            sp.Skeleton(choice(spawn_location),player)
-    else:                   #120초 이후
+            if random() >= 0.5:
+                sp.Zombie(choice(spawn_location),player)
+            else:
+                sp.Skeleton(choice(spawn_location),player)
+    elif game_sec <=180:                   #120초 이후
         if random()*FPS <= 1:    #1초당 1마리
-            sp.Zombie(choice(spawn_location),player)
-            sp.Skeleton(choice(spawn_location),player)
+            if random() >= 0.5:
+                sp.Zombie(choice(spawn_location),player)
+            else:
+                sp.Skeleton(choice(spawn_location),player)
+    else:
+        if random()*FPS <= 2:
+            if random() >= 0.5:
+                sp.Zombie(choice(spawn_location),player)
+            else:
+                sp.Skeleton(choice(spawn_location),player)
+
 
 
 #자동으로 줄바꿈 및 화면 출력(가운데 정렬)
@@ -147,7 +162,6 @@ def game():
     selected_sprite = None
     select_ability = 0
     player_level = 1
-    ability_list = []
     while running:
         game_sec = game_tick//FPS
         click = 0
@@ -211,20 +225,20 @@ def game():
             if ability1.collidepoint((mx,my)):
                 if click:
                     ability123_list[0]()
-                    ability_list.append(ability123_list[0])
+                    ab.player_ability_list.append(ability123_list[0])
                     select_ability = 0
                 SCREEN.blit(outline_ability_frame,ability1)
             elif ability2.collidepoint((mx,my)):
                 if click:
                     ability123_list[1]()
-                    ability_list.append(ability123_list[1])
+                    ab.player_ability_list.append(ability123_list[1])
                     select_ability = 0                
                 SCREEN.blit(outline_ability_frame,ability2)
                 
             elif ability3.collidepoint((mx,my)):
                 if click:
                     ability123_list[2]()
-                    ability_list.append(ability123_list[2])
+                    ab.player_ability_list.append(ability123_list[2])
                     select_ability = 0
                 SCREEN.blit(outline_ability_frame,ability3)
             pg.display.flip()
@@ -351,7 +365,7 @@ def game():
             msg_sell_price_rect.move_ip(0,90)
             SCREEN.blit(msg_sell_price,msg_sell_price_rect)
             
-            msg_sprite_level = MYFONT.render(f"{selected_sprite.level} level",True,WHITE)
+            msg_sprite_level = MYFONT.render(f"{selected_sprite.level} 레벨",True,WHITE)
             sprite_level_rect = msg_sprite_level.get_rect()
             sprite_level_rect.midbottom = selected_sprite.shown_rect.midtop
             sprite_level_rect.move_ip(0,-30)
@@ -455,10 +469,10 @@ mortar_rect = MORTAR_IMAGE.get_rect()
 mortar_green = fill(MORTAR_IMAGE,GREEN)
 mortar_red = fill(MORTAR_IMAGE,RED)
 
-bomber_button = building_frame.get_rect(center=(925,HEIGHT-150))
-bomber_rect = BOMBER_IMAGE.get_rect()
-bomber_green = fill(BOMBER_IMAGE,GREEN)
-bomber_red = fill(BOMBER_IMAGE,RED)
+fireball_thrower_button = building_frame.get_rect(center=(925,HEIGHT-150))
+fireball_thrower_rect = FIREBALL_THROWER_IMAGE.get_rect()
+fireball_thrower_green = fill(FIREBALL_THROWER_IMAGE,GREEN)
+fireball_thrower_red = fill(FIREBALL_THROWER_IMAGE,RED)
 def build(camera,player):
     running = 1
     click = 0
@@ -550,19 +564,19 @@ def build(camera,player):
                             player.gold -= sp.Mortar.price[0]
                         else:
                             sp.Message("골드가 충분하지 않습니다.",RED)
-        elif selected == "bomber":
-            if not bomber_button.collidepoint((mx,my)):
-                bomber_rect.center = (mx,my)
-                if collision_check(bomber_rect,camera):
-                    SCREEN.blit(bomber_red,bomber_rect.topleft)
+        elif selected == "fireball_thrower":
+            if not fireball_thrower_button.collidepoint((mx,my)):
+                fireball_thrower_rect.center = (mx,my)
+                if collision_check(fireball_thrower_rect,camera):
+                    SCREEN.blit(fireball_thrower_red,fireball_thrower_rect.topleft)
                     if not click:
                         sp.Message("여기에 건물을 설치할 수 없습니다.",RED)
                 else:
-                    SCREEN.blit(bomber_green,bomber_rect.topleft)
+                    SCREEN.blit(fireball_thrower_green,fireball_thrower_rect.topleft)
                     if not click:
-                        if player.gold >= sp.Bomber.price[0]:
-                            sp.Bomber(pg.math.Vector2(mx+camera.offset.x,516),player)
-                            player.gold -= sp.Bomber.price[0]
+                        if player.gold >= sp.FireballThrower.price[0]:
+                            sp.FireballThrower(pg.math.Vector2(mx+camera.offset.x,516),player)
+                            player.gold -= sp.FireballThrower.price[0]
                         else:
                             sp.Message("골드가 충분하지 않습니다.",RED)
         if click:
@@ -577,8 +591,8 @@ def build(camera,player):
                 selected = "mine"
             elif mortar_button.collidepoint((mx,my)):
                 selected = "mortar"
-            elif bomber_button.collidepoint((mx,my)):
-                selected = "bomber"
+            elif fireball_thrower_button.collidepoint((mx,my)):
+                selected = "fireball_thrower"
         else:
             selected = ""
 
@@ -612,12 +626,12 @@ def build(camera,player):
         else:
             blit_text(mortar_button,f"{sp.Mortar.price[0]} 골드",mortar_button.height/4*3,RED)
 
-        SCREEN.blit(building_frame,bomber_button)
-        blit_text(bomber_button,"폭탄 투척기",mortar_button.height/4,DEEP_PURPLE)
-        if player.gold >= sp.Bomber.price[0]:
-            blit_text(bomber_button,f"{sp.Bomber.price[0]} 골드",bomber_button.height/4*3,DEEP_PURPLE)
+        SCREEN.blit(building_frame,fireball_thrower_button)
+        blit_text(fireball_thrower_button,"화염구 투척기",mortar_button.height/4,DEEP_PURPLE)
+        if player.gold >= sp.FireballThrower.price[0]:
+            blit_text(fireball_thrower_button,f"{sp.FireballThrower.price[0]} 골드",fireball_thrower_button.height/4*3,DEEP_PURPLE)
         else:
-            blit_text(bomber_button,f"{sp.Mortar.price[0]} 골드",bomber_button.height/4*3,RED)
+            blit_text(fireball_thrower_button,f"{sp.Mortar.price[0]} 골드",fireball_thrower_button.height/4*3,RED)
 
         if wall_button.collidepoint((mx,my)):
             SCREEN.blit(outline_building_frame,wall_button)
@@ -630,8 +644,8 @@ def build(camera,player):
             
         elif mortar_button.collidepoint((mx,my)):
             SCREEN.blit(outline_building_frame,mortar_button)
-        elif bomber_button.collidepoint((mx,my)):
-            SCREEN.blit(outline_building_frame,bomber_button)
+        elif fireball_thrower_button.collidepoint((mx,my)):
+            SCREEN.blit(outline_building_frame,fireball_thrower_button)
         #현재 골드 표시
         msg_gold = MYFONT.render("골드 : {}".format(player.gold),True,WHITE)
         SCREEN.blit(msg_gold,(10,10))
