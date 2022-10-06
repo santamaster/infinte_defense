@@ -22,11 +22,11 @@ message_sprites = pg.sprite.Group()
 hp_bar_sprites = pg.sprite.Group()
 
 #플레이어
-class Player(pg.sprite.Sprite):
+class Player(pg.sprite.Sprite): 
     max_level = 6
     hp = 1000
     vel = 10
-    required_exp = [20,40,400,600,1000]
+    required_exp = [20,200,400,800,1600]
     gold_cooldown = 1* FPS
     gold_output = 3
     start_gold = 1000
@@ -91,6 +91,7 @@ class Player(pg.sprite.Sprite):
         #점프 구현
         if keys[K_w]:
             if not self.jumping: #만약 jumping이 False라면
+                JUMP_SOUND.play()
                 self.jumping = True
                 self.jump_pw = PLAYER_JUMP_PW
                 self.jump_vel = self.jump_pw/2 * GRAVITY
@@ -223,14 +224,15 @@ class Enemy(pg.sprite.Sprite):
                 Player.total_gold +=5
                 Earn_gold_effect(self)
             self.player.get_exp(self.exp)
+            ENEMY_DEAD_SOUND.play()
             self.kill()
             Player.total_killed_enemy += 1
 
         
 #좀비
 class Zombie(Enemy):
-    hp = [90,150,200]
-    attack_dmg = [20,40,60]
+    hp = [90,120,150]
+    attack_dmg = [20,30,40]
     exp = [20,40,60]
     attack_cooldown = 1 * FPS
     first_attack_cooldown = 0.1*FPS
@@ -272,7 +274,7 @@ class Zombie(Enemy):
         self.hp_bar = Hp_bar(self,Zombie.hp_bar_width)
 
 class Skeleton(Enemy):
-    hp = [60,120,150]
+    hp = [60,80,100]
     attack_dmg = [50,70,100]
     exp = [20,40,60]
     attack_cooldown = 1 * FPS
@@ -366,6 +368,7 @@ class Arrow(pg.sprite.Sprite):
         self.delta_square_y = Arrow.power/(MortarShot.time/2)
         self.rect = self.image.get_rect()
         self.shown_rect = self.rect.copy()
+        ARROW_SOUND.play()
     def attack(self):
         collided_sprite = pg.sprite.spritecollide(self,attackable_sprites,False)
         if collided_sprite:
@@ -577,7 +580,7 @@ class CanonShot(pg.sprite.Sprite):
         self.shown_rect = None
         self.vector = pg.math.Vector2(location.x,location.y-50)
         self.rect.midbottom = self.vector
-
+        CANONSHOT_SOUND.play()
     def attack(self):
         collided_sprite = pg.sprite.spritecollide(self,enemy_sprites,False)
         if collided_sprite:
@@ -602,7 +605,7 @@ class CanonShot(pg.sprite.Sprite):
 
 class Mortar(Building):
     attack_range = 1200
-    least_attack_range = 500
+    least_attack_range = 300
     first_attack_cooldown = 1*FPS
     attack_cooldown = 3*FPS
     first_attack_cooldown_reduction = 1
@@ -695,8 +698,10 @@ class MortarShot(pg.sprite.Sprite):
         self.delta_y = self.power
         self.delta_square_y = self.power/(MortarShot.time/2)
         self.lavashot = lavashot
+        MORTARSHOT_BOM_SOUND.play()
     def attack(self):
         if self.vector.y > 516:
+            MORTARSHOT_END_SOUND.play()
             collided_sprite = pg.sprite.spritecollide(self,enemy_sprites,False)
             if collided_sprite:
                 for sprite in collided_sprite:
@@ -759,12 +764,13 @@ class FireballThrower(Building):
     hp = [400,500,600]
     max_level = 3
     price = [400,500,600]
-    attack_dmg = [20,25,30]
+    attack_dmg = [4,6,10]
     hp_bar_width = 150
-    attack_range = 500
+    attack_range = 600
     first_attack_cooldown = 0.1*FPS
-    attack_cooldown = 0.5*FPS
+    attack_cooldown = 0.1*FPS
     damage_rate = 1
+    ball_height = (30,50)
     def __init__(self,vector,player):
         super().__init__(player)
         fireball_thrower_sprites.add(self)
@@ -789,6 +795,7 @@ class FireballThrower(Building):
         self.price = FireballThrower.price[self.level-1]
         self.upgrade_price = FireballThrower.price[self.level]
         self.hp_bar = Hp_bar(self,FireballThrower.hp_bar_width)
+        self.index = 0
     def attack(self):
         #사거리 안에 있는 적
         enemy_in_range = [ sprite for sprite in enemy_sprites.sprites() \
@@ -807,17 +814,26 @@ class FireballThrower(Building):
                 self.first_attack_counter +=1
                 if self.first_attack_counter >= FireballThrower.first_attack_cooldown:
                     self.first_attack = 1
-                    Fireball(self.attack_dmg*FireballThrower.damage_rate,self.vector,target.vector)
+                    Fireball(self.attack_dmg*FireballThrower.damage_rate,self.vector,target.vector,FireballThrower.ball_height[self.index])
+                    if self.index == 0:
+                        self.index = 1
+                    else:
+                        self.index = 0
             else:
                 self.attack_counter += 1
                 if self.attack_counter >= FireballThrower.attack_cooldown:
                     self.attack_counter = 0
-                    Fireball(self.attack_dmg*FireballThrower.damage_rate,self.vector,target.vector)
+                    Fireball(self.attack_dmg*FireballThrower.damage_rate,self.vector,target.vector,FireballThrower.ball_height[self.index])
+                    if self.index == 0:
+                        self.index = 1
+                    else:
+                        self.index = 0
 
         else:
             self.first_attack_counter = 0
             self.attack_counter = 0
             self.first_attack = 0
+        
     
     def upgrade(self):
         if self.level < FireballThrower.max_level:
@@ -838,12 +854,12 @@ class FireballThrower(Building):
 
 class Fireball(pg.sprite.Sprite):
     time = 0.5*FPS
-    def __init__(self,damage,start_point,end_point):
+    def __init__(self,damage,start_point,end_point,ball_height):
         super().__init__()
         all_sprites.add(self)
         noncreature_sprites.add(self)
         self.vector = pg.math.Vector2(start_point)
-        self.vector.y -= 100
+        self.vector.y -= ball_height
         self.start_point = pg.math.Vector2(start_point)
         self.end_point = pg.math.Vector2(end_point)
         self.attack_dmg = damage        
@@ -852,7 +868,13 @@ class Fireball(pg.sprite.Sprite):
         self.rect.midbottom = self.vector
         self.shown_rect = self.rect.copy()
         self.delta_x = (self.end_point.x-self.start_point.x)/Fireball.time
-        self.delta_y = -100/Fireball.time
+        self.delta_y = -ball_height/Fireball.time
+        FIREBALL_SOUND.play()
+        if self.delta_x >= 0:
+            self.vector.x += 60
+        else:
+            self.vector.x -= 60
+
     def attack(self):
         if self.vector.y > self.start_point.y:
             collided_sprite = pg.sprite.spritecollide(self,enemy_sprites,False)
@@ -873,8 +895,8 @@ class Fireball(pg.sprite.Sprite):
 class Mine(Building):
     hp = [300,400,600]
     max_level = 3
-    price = [150,250,400]
-    gold_output = [20,30,40]
+    price = [200,350,500]
+    gold_output = [15,20,30]
     gold_cooldown = 2 * FPS
     gold_cooldown_rate = 1
     hp_bar_width = 150
@@ -971,6 +993,7 @@ class Earn_gold_effect(Effect):
         self.hold_time = EARN_GOLD_EFFECT_HOLD_TIME
         self.counter = 0
         self.rect.center = self.vector
+        COIN_SOUND.play()
 
     def update(self):
         self.counter += 1

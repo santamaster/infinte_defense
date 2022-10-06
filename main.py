@@ -1,3 +1,4 @@
+from pickle import GET
 import pygame as pg
 from sys import exit
 from pygame.locals import *
@@ -41,30 +42,35 @@ def enemy_spawn(game_sec,player):
             else:
                 sp.Skeleton(choice(spawn_location),player)
     elif game_sec <= 60:    #30~60초
-        if random()*FPS <= 0.3:  #1초당 0.2마리
+        if random()*FPS <= 0.4:  #1초당 0.2마리
             if random() >= 0.5:
                 sp.Zombie(choice(spawn_location),player)
             else:
                 sp.Skeleton(choice(spawn_location),player)
-    elif game_sec <= 120:   #60~120초
-        if random()*FPS <= 0.5:  #1초당 0.5마리
+    elif game_sec <= 90:   #60~120초
+        if random()*FPS <= 0.6:  #1초당 0.5마리
             if random() >= 0.5:
-                sp.Zombie(choice(spawn_location),player)
+                sp.Zombie(choice(spawn_location),player,2)
             else:
-                sp.Skeleton(choice(spawn_location),player)
-    elif game_sec <=180:                   #120초 이후
+                sp.Skeleton(choice(spawn_location),player,2)
+    elif game_sec <=120:                   #120초 이후
         if random()*FPS <= 1:    #1초당 1마리
             if random() >= 0.5:
-                sp.Zombie(choice(spawn_location),player)
+                sp.Zombie(choice(spawn_location),player,2)
             else:
-                sp.Skeleton(choice(spawn_location),player)
-    else:
-        if random()*FPS <= 2:
+                sp.Skeleton(choice(spawn_location),player,2)
+    elif game_sec <= 180:
+        if random()*FPS <= 1.6:
             if random() >= 0.5:
-                sp.Zombie(choice(spawn_location),player)
+                sp.Zombie(choice(spawn_location),player,3)
             else:
-                sp.Skeleton(choice(spawn_location),player)
-
+                sp.Skeleton(choice(spawn_location),player,3)
+    else:
+        if random()*FPS <= game_sec/90:#점점 빨라짐
+            if random() >= 0.5:
+                sp.Zombie(choice(spawn_location),player,3)
+            else:
+                sp.Skeleton(choice(spawn_location),player,3)
 
 
 #자동으로 줄바꿈 및 화면 출력(가운데 정렬)
@@ -235,12 +241,16 @@ def game():
             blit_text(ability3,ab.ability_info[ability123_list[2]][1],ability3.height/2)
             if ability1.collidepoint((mx,my)):
                 if click:
+                    GETABILITY_SOUND.play()
+                    SELECT_SOUND.play()
                     ability123_list[0]()
                     ab.player_ability_list.append(ability123_list[0])
                     select_ability = 0
                 SCREEN.blit(outline_ability_frame,ability1)
             elif ability2.collidepoint((mx,my)):
                 if click:
+                    GETABILITY_SOUND.play()
+                    SELECT_SOUND.play()
                     ability123_list[1]()
                     ab.player_ability_list.append(ability123_list[1])
                     select_ability = 0                
@@ -248,6 +258,8 @@ def game():
                 
             elif ability3.collidepoint((mx,my)):
                 if click:
+                    GETABILITY_SOUND.play()
+                    SELECT_SOUND.play()
                     ability123_list[2]()
                     ab.player_ability_list.append(ability123_list[2])
                     select_ability = 0
@@ -260,6 +272,7 @@ def game():
             if defeat_goto_main.collidepoint((mx, my)):
                 msg_goto_main = MYFONT.render("메인 메뉴",True,WHITE)
                 if click:
+                    SELECT_SOUND.play()
                     reset()
                     break
             else:
@@ -293,9 +306,11 @@ def game():
 
             if click:
                 if goto_main_menu.collidepoint((mx,my)):
+                    SELECT_SOUND.play()
                     reset()
                     break
                 elif replay.collidepoint((mx,my)):
+                    SELECT_SOUND.play()
                     reset()
                     player = sp.Player()
                     game_tick = 0
@@ -309,6 +324,7 @@ def game():
                 elif menu_frame.collidepoint((mx,my)):
                     pass
                 else:
+                    SELECT_SOUND.play()
                     menu = 0
             
             #메뉴 그리기
@@ -344,6 +360,7 @@ def game():
         #버튼 클릭시 실행
         if build_button.collidepoint((mx, my)):
             if click:
+                SELECT_SOUND.play()
                 build(camera,player)
         
         #건물이 마우스와 충돌시 외각선
@@ -351,6 +368,7 @@ def game():
             if building.shown_rect.collidepoint((mx,my)):
                 SCREEN.blit(building.outline_image,building.shown_rect)
                 if click:
+                    SELECT_SOUND.play()
                     upgrade_sell = 1
                     selected_sprite = building
         
@@ -384,6 +402,7 @@ def game():
             SCREEN.blit(msg_sprite_level,sprite_level_rect)
             if upgrade_button.collidepoint((mx,my)):
                 if click:
+                    SELECT_SOUND.play()
                     if selected_sprite.level == selected_sprite.max_level:
                         sp.Message("이미 최대 레벨입니다.",RED)
                         upgrade_sell = 0
@@ -400,6 +419,7 @@ def game():
                         selected_sprite = None
             elif sell_button.collidepoint((mx,my)):
                 if click:
+                    SELECT_SOUND.play()
                     player.gold += int(selected_sprite.price * REFUND_RATE)
                     selected_sprite.kill()
                     upgrade_sell = 0
@@ -407,6 +427,7 @@ def game():
             elif selected_sprite.shown_rect.collidepoint((mx,my)):
                 pass
             elif click:
+                SELECT_SOUND.play()
                 upgrade_sell = 0
                 selected_sprite = None
         
@@ -593,6 +614,7 @@ def build(camera,player):
         if click:
             if exit_button.collidepoint((mx,my)):
                 if not selected:
+                    SELECT_SOUND.play()
                     running = 0
             elif wall_button.collidepoint((mx, my)):
                 selected = "wall"
@@ -681,7 +703,7 @@ msg_end_white = MYFONT.render("종료",True,WHITE)
 msg_end_rect = msg_end.get_rect(center=(WIDTH/2,HEIGHT/2+250))
 
 
-def main_menu():
+def main():
     click = 0
     running = 1
     while running:
@@ -703,9 +725,11 @@ def main_menu():
 
         if click:
             if play_button.collidepoint((mx, my)):
+                SELECT_SOUND.play()
                 game()
                 click = 0
             elif end_button.collidepoint((mx,my)):
+                SELECT_SOUND.play()
                 running = 0
                 click = 0
 
@@ -727,5 +751,5 @@ def main_menu():
 
         pg.display.flip()
     
-main_menu()
+main()
 pg.quit()

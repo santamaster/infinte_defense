@@ -15,6 +15,7 @@ WIDTH, HEIGHT = 1366,768
 BG_WIDTH,BG_HEIGHT=4000,768
 SCREEN = pg.display.set_mode((WIDTH,HEIGHT))
 CLOCK = pg.time.Clock()
+pg.mixer.init()
 FPS = 60
 pg.display.set_caption("game_project")
 CAMERA_VEL = 10
@@ -89,6 +90,10 @@ SELL_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\sell.png").co
 BUILD_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\build.png").convert_alpha(),(100,100))
 REPLAY_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\replay.png").convert_alpha(),(50,50))
 GOTO_MAIN_MENU_BUTTON =pg.transform.scale(pg.image.load("resources\\images\\exit.png").convert_alpha(),(50,50))
+SELECT_SOUND = pg.mixer.Sound("resources\\sounds\\select.wav")
+SELECT_SOUND.set_volume(0.1)
+GETABILITY_SOUND = pg.mixer.Sound("resources\\sounds\\getability.wav")
+GETABILITY_SOUND.set_volume(0.1)
 PLAYER_IMAGE_SIZE = (128,128)
 PLAYER_IMAGE_SPEED = 6/FPS
 PLAYER_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\player1.png").convert_alpha(),PLAYER_IMAGE_SIZE)
@@ -97,10 +102,15 @@ PLAYER_IMAGES =set_size(PLAYER_IMAGE_SIZE,\
 
 PLAYER_IMAGE_L = pg.transform.flip(PLAYER_IMAGE,True,False)
 PLAYER_IMAGES_L = [pg.transform.flip(image,True,False) for image in PLAYER_IMAGES]
+JUMP_SOUND = pg.mixer.Sound("resources\\sounds\\jump.wav")
+JUMP_SOUND.set_volume(0.1)
+
 
 COIN_IMAGE = pg.image.load("resources\\images\\gold1.png").convert_alpha()
 
 #ZOMBIE
+ENEMY_DEAD_SOUND = pg.mixer.Sound("resources\\sounds\\enemydead.wav")
+ENEMY_DEAD_SOUND.set_volume(0.1)
 ZOMBIE_IMAGE_SIZE = (128,128)
 ZOMBIE_IMAGE_SPEED = 1/FPS
 ZOMBIE_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\zombie1.png").convert_alpha(),ZOMBIE_IMAGE_SIZE)
@@ -121,7 +131,8 @@ SKELETON_IMAGE_L = pg.transform.flip(SKELETON_IMAGE,True,False)
 SKELETON_IMAGES_L = [pg.transform.flip(image,True,False) for image in SKELETON_IMAGES]
 SKELETON_ARROW_IMAGE = pg.image.load("resources\\images\\arrow.png").convert_alpha()
 SKELETON_ARROW_IMAGE_L = pg.transform.flip(SKELETON_ARROW_IMAGE,True,False)
-
+ARROW_SOUND = pg.mixer.Sound("resources\\sounds\\arrow.wav")
+ARROW_SOUND.set_volume(0.1)
 #WALL
 WALL_IMAGE_SIZE = (100,150)
 WALL_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\wall.png").convert_alpha(),WALL_IMAGE_SIZE)
@@ -134,25 +145,34 @@ CANON_IMAGE_L = pg.transform.flip(CANON_IMAGE,True,False)
 OUTLINE_CANON = get_outline(CANON_IMAGE)
 OUTLINE_CANON_L = get_outline(CANON_IMAGE_L)
 CANONSHOT_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\canonshot.png").convert_alpha(),(32,32))
+CANONSHOT_SOUND = pg.mixer.Sound("resources\\sounds\\canonattack.wav")
+CANONSHOT_SOUND.set_volume(0.1)
 
 #MORTAR
 MORTAR_IMAGE_SIZE = (100,150)
 MORTAR_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mortar.png").convert_alpha(),MORTAR_IMAGE_SIZE)
 OUTLINE_MORTAR = get_outline(MORTAR_IMAGE)
 MORTARSHOT_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\canonshot.png").convert_alpha(),(50,50))
+MORTARSHOT_BOM_SOUND = pg.mixer.Sound("resources\\sounds\\mortarshotbom.wav")
+MORTARSHOT_BOM_SOUND.set_volume(0.1)
+MORTARSHOT_END_SOUND = pg.mixer.Sound("resources\\sounds\\mortarshotend.wav")
+MORTARSHOT_END_SOUND.set_volume(0.1)
 FIRE_IMAGE_SPEED = 12/FPS
 FIRE_IMAGE_SIZE = (300,100)
 FIRE_IMAGES = set_size(FIRE_IMAGE_SIZE,\
     *[pg.image.load("resources\\images\\fire{}.png".format(i)).convert_alpha() for i in range(1,5)])
 
+
 #FIREBALL_THROWER
-FIREBALL_THROWER_IMAGE_SIZE = (100,150)
-FIREBALL_THROWER_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\mortar.png").convert_alpha(),FIREBALL_THROWER_IMAGE_SIZE)
+FIREBALL_THROWER_IMAGE_SIZE = (150,100)
+FIREBALL_THROWER_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\fireball_thrower.png").convert_alpha(),FIREBALL_THROWER_IMAGE_SIZE)
 FIREBALL_THROWER_IMAGE_L = pg.transform.flip(FIREBALL_THROWER_IMAGE,True,False)
 OUTLINE_FIREBALL_THROWER = get_outline(FIREBALL_THROWER_IMAGE)
 OUTLINE_FIREBALL_THROWER_L = get_outline(FIREBALL_THROWER_IMAGE_L)
 
 FIREBALL_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\fireball.png").convert_alpha(),(20,20))
+FIREBALL_SOUND = pg.mixer.Sound("resources\\sounds\\fireball.wav")
+FIREBALL_SOUND.set_volume(0.1)
 
 
 
@@ -168,3 +188,5 @@ EARN_GOLD_EFFECT_IMAGES = set_size(EARN_GOLD_EFFECT_SIZE,\
     *[pg.image.load("resources\\images\\gold{}.png".format(i)).convert_alpha() for i in range(1,5)])
 EARN_GOLD_EFFECT_VEL = -6
 EARN_GOLD_EFFECT_HOLD_TIME = 0.35*FPS
+COIN_SOUND = pg.mixer.Sound("resources\\sounds\\coin.wav")
+COIN_SOUND.set_volume(0.1)
