@@ -157,7 +157,7 @@ class Enemy(pg.sprite.Sprite):
         self.first_attack_cooldown = 0
         self.first_attack_counter = 0
         self.first_attack = 0
-        self.status = None
+        self.status = "move"
         self.exp = 0
 
     def attack(self):
@@ -182,7 +182,10 @@ class Enemy(pg.sprite.Sprite):
                     if Enemy.damaged_by_wall:
                         if target in wall_sprites:
                             self.hp -= 10
-
+            if target.vector.x - self.vector.x > 0:
+                self.image = ZOMBIE_IMAGE
+            else:
+                self.image = ZOMBIE_IMAGE_L
         else:
             self.attack_counter = 0
             self.first_attack_counter = 0
@@ -193,19 +196,27 @@ class Enemy(pg.sprite.Sprite):
         if player_sprites:
             if self.status == "attack":
                 return
+            if self.image_counter >= self.image_count-1:
+                    self.image_counter = 0
+            else:
+                self.image_counter += self.image_speed    
+
             if self.player.vector.x - self.vector.x > 0:
                 self.vector.x += self.vel
+                self.image = self.images[int(self.image_counter)]
                 self.status = "move"
+
             elif self.player.vector.x - self.vector.x < 0:
                 self.vector.x -= self.vel
+                self.image = self.images_l[int(self.image_counter)]
                 self.status = "move"
 
         self.rect.midbottom = self.vector
         self.range_rect.center = self.vector
 
     def update(self):
-        self.attack()
         self.move()
+        self.attack()
         if self.hp <= 0:
             if Enemy.get_gold:
                 self.player.gold +=5
@@ -238,28 +249,27 @@ class Zombie(Enemy):
         self.attack_cooldown = Zombie.attack_cooldown
         self.first_attack_cooldown = Zombie.first_attack_cooldown
         self.vel = Zombie.vel
-        self.image = ZOMBIE_IMAGE
-        self.rect = self.image.get_rect()
-        self.range_rect = self.rect.inflate(2*Zombie.attack_range,0)
+        self.images = ZOMBIE_IMAGES
+        self.images_l = ZOMBIE_IMAGES_L
+        self.image_counter = 0
+        self.image_count = len(self.images)
+        self.image_speed = ZOMBIE_IMAGE_SPEED
+
         if spawn_location == "right":
+            self.image = ZOMBIE_IMAGE_L    
+            self.rect = self.image.get_rect()
+            self.range_rect = self.rect.inflate(2*Zombie.attack_range,0)
             self.vector = pg.math.Vector2(BG_WIDTH,516)
             self.rect.midbottom = self.vector
             self.range_rect.center = self.vector
         elif spawn_location == "left":
+            self.image = ZOMBIE_IMAGE
+            self.rect = self.image.get_rect()
+            self.range_rect = self.rect.inflate(2*Zombie.attack_range,0)
             self.vector = pg.math.Vector2(0,516)
             self.rect.midbottom = self.vector
             self.range_rect.center = self.vector
         self.hp_bar = Hp_bar(self,Zombie.hp_bar_width)
-    def update(self):
-        self.attack()
-        self.move()
-        if self.hp <= 0:
-            if Enemy.get_gold:
-                self.player.gold +=5
-                Earn_gold_effect(self)
-            self.player.get_exp(self.exp)
-            self.kill()
-            Player.total_killed_enemy += 1
 
 class Skeleton(Enemy):
     hp = [60,120,150]
@@ -282,14 +292,23 @@ class Skeleton(Enemy):
         self.attack_cooldown = Skeleton.attack_cooldown
         self.first_attack_cooldown = Skeleton.first_attack_cooldown
         self.vel = Skeleton.vel
-        self.image = SKELETON_IMAGE
-        self.rect = self.image.get_rect()
-        self.range_rect = self.rect.inflate(2*Skeleton.attack_range,0)
+        self.images = SKELETON_IMAGES
+        self.images_l = SKELETON_IMAGES_L
+        self.image_counter = 0
+        self.image_count = len(self.images)
+        self.image_speed = SKELETON_IMAGE_SPEED
+    
         if spawn_location == "right":
+            self.image = SKELETON_IMAGE_L
+            self.rect = self.image.get_rect()
+            self.range_rect = self.rect.inflate(2*Skeleton.attack_range,0)
             self.vector = pg.math.Vector2(BG_WIDTH,516)
             self.rect.midbottom = self.vector
             self.range_rect.center = self.vector
         elif spawn_location == "left":
+            self.image = SKELETON_IMAGE
+            self.rect = self.image.get_rect()
+            self.range_rect = self.rect.inflate(2*Skeleton.attack_range,0)
             self.vector = pg.math.Vector2(0,516)
             self.rect.midbottom = self.vector
             self.range_rect.center = self.vector
@@ -316,7 +335,10 @@ class Skeleton(Enemy):
                     if Enemy.damaged_by_wall:
                         if target in wall_sprites:
                             self.hp -= 10
-
+            if target.vector.x - self.vector.x > 0:
+                self.image = SKELETON_IMAGE
+            else:
+                self.image = SKELETON_IMAGE_L
         else:
             self.attack_counter = 0
             self.first_attack_counter = 0
@@ -426,8 +448,6 @@ class Wall(Building):
             self.hp += self.max_hp * 0.02
             if self.hp >= self.max_hp:
                 self.hp = self.max_hp
-            else:
-                pass #회복 이펙트
             self.heal_counter = 0
     def update(self):
         if self.hp <= 0:

@@ -119,7 +119,8 @@ def mine_faster():
 
 player_ability_list = []
 
-level_2_ability = [canon_increase_damage,canon_enhanced_attack,canon_infite_range,double_barrel,get_gold_when_kill_enemy,building_gold]
+level_2_ability = [canon_increase_damage,canon_enhanced_attack,canon_infite_range,double_barrel,\
+    get_gold_when_kill_enemy,building_gold]
 def get_level_2_ability():
     if len(sp.mine_sprites) >= 2:
         level_2_ability.append(mine_faster)
@@ -128,7 +129,8 @@ def get_level_2_ability():
         level_2_ability.append(attacking_wall)
     pass
 
-level_3_ability = [canon_increase_damage,canon_enhanced_attack,mine_faster]
+level_3_ability = [canon_increase_damage,canon_enhanced_attack,canon_infite_range,double_barrel,\
+    get_gold_when_kill_enemy,building_gold]
 def get_level_3_ability():
 
     #겹치는 능력 제거
@@ -137,7 +139,8 @@ def get_level_3_ability():
             level_3_ability.remove(ability)
 
 
-level_4_ability = [canon_increase_damage,canon_enhanced_attack,mine_faster]
+level_4_ability = [canon_increase_damage,canon_enhanced_attack,canon_infite_range,double_barrel,\
+    get_gold_when_kill_enemy,building_gold]
 def get_level_4_ability():
     #플레이어 체력이 50% 이하일 때
     for player in sp.player_sprites:
@@ -149,7 +152,8 @@ def get_level_4_ability():
         if ability in level_4_ability:
             level_4_ability.remove(ability)
 
-level_5_ability = [canon_increase_damage,canon_enhanced_attack,mine_faster]
+level_5_ability = [canon_increase_damage,canon_enhanced_attack,canon_infite_range,double_barrel,\
+    get_gold_when_kill_enemy,building_gold]
 def get_level_5_ability():
     #플레이어 체력이 50% 이하일 때
     for player in sp.player_sprites:
@@ -162,7 +166,8 @@ def get_level_5_ability():
         if ability in level_5_ability:
             level_5_ability.remove(ability)
 
-level_6_ability = [canon_increase_damage,canon_enhanced_attack,mine_faster]
+level_6_ability = [canon_increase_damage,canon_enhanced_attack,canon_infite_range,double_barrel,\
+    get_gold_when_kill_enemy,building_gold]
 def get_level_6_ability():
     #플레이어 체력이 50% 이하일 때
     for player in sp.player_sprites:

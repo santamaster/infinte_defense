@@ -152,7 +152,7 @@ hp_frame = hp_frame_image.get_rect(topright=(WIDTH - HP_FRAME_INTERVAL,HP_FRAME_
 #게임
 def game():
     player = sp.Player()
-
+    stop = 0
     running = 1
     click = 0
     game_tick = 0
@@ -180,12 +180,23 @@ def game():
                         menu = 1
                     else:
                         menu = 0
+                #스페이스바 누를 시 정지
+                elif event.key == K_SPACE:
+                    if not menu:
+                        if not stop:
+                            stop = 1
+                        else:
+                            stop = 0
+                    
             elif event.type == MOUSEBUTTONDOWN:
                 if event.button == 1:
                     click = 1
         #마우스 위치 가져오기
         mx, my = pg.mouse.get_pos()
 
+        #게임 멈춤
+        if stop:
+            continue
         #플레이어 레벨 업
         if player_level < player.level:
             player_level = player.level

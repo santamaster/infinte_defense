@@ -1,0 +1,196 @@
+main.py
+게임파일 실행
+-func game()
+-func build()
+-func main_menu()
+
+camera.py
+화면 그리기
+-class Camera
+	-func player_follow()
+	카메라를 플레이어따라 움직임
+
+	-func draw()
+	카메라가 스프라이트를 그림.(체력,이펙트,메세지 포함)
+	
+	-func darkened_draw()
+	카메라가 스프라이트를 그리고 그 위에 반투명한 사각형(필름)을 그림.
+
+ability.py
+플레이어 능력 함수 정의
+
+sprites.py
+스프라이트 정의
+모든sprite class들은 update라는 함수를 가지고 있으며 1/60초마다 update함수를 실행함
+#스프라이트 그룹
+all_sprites = pg.sprite.Group()         #모든 스프라이트 그룹
+player_sprites = pg.sprite.Group()      #플레이어 스프라이트 그룹
+enemy_sprites = pg.sprite.Group()       #적 스프라이트 그룹
+building_sprites = pg.sprite.Group()    #건물 스프라이트 그룹
+noncreature_sprites = pg.sprite.Group() #비생물 스프라이트 그룹
+creature_sprites = pg.sprite.Group()    #생물 스프라이트 그룹
+attackable_sprites = pg.sprite.Group()  #적이 공격가능한 스프라이트 그룹
+
+wall_sprites = pg.sprite.Group()
+mine_sprites = pg.sprite.Group()
+canon_sprites = pg.sprite.Group()
+mortar_sprites = pg.sprite.Group()
+fireball_thrower_sprites = pg.sprite.Group()
+#게임 플레이에 영향을 미치지 않는 스프라이트 그룹
+effect_sprites = pg.sprite.Group()
+message_sprites = pg.sprite.Group()
+hp_bar_sprites = pg.sprite.Group()
+
+-class Player
+	all_sprites.add(self)
+	player_sprites.add(self)
+	attackable_sprites.add(self)
+            creature_sprites.add(self)
+
+	-func move()
+	d키 입력시 오른쪽이동
+	a키 입력시 왼쪽이동
+	w키 입력시 점프
+
+	-func update()
+	self.move()
+	1초마다 3골드를 얻음
+	자신의 체력이 0이하면
+		kill()
+
+	-func get_exp(exp)
+	자신이 exp만큼의 경험치를 얻음
+	자신의 경험치가 레벨업 경험치보다 크면
+		self.level_up() 및 경험치- 레벨업 경험치
+
+	-func level_up()
+	레벨 +=1
+	레벨업 경험치[레벨-1]
+
+-class Enemy
+	enemy_sprites.add(self)
+        	creature_sprites.add(self)
+        	all_sprites.add(self)
+
+	-func attack()
+		target = attackable_sprites의 스프라이트들과 공격 범위 사각형과 충돌한 sprites 중 하나
+
+		target이 있으면 
+			상태 = "attack"
+			초기 공격을 안했으면
+				초기 공격 카운트 += 1, 
+				초기 공격 카운트가 초기 공격 속도보다 커지면 
+					target.hp 를 공격력에 따라 감소시킴
+
+			초기 공격을 했으면
+				공격 카운트 += 1,
+				공격 카운트가 공격 속도보다 커지면 
+					target.hp를 공격력에 따라 감소시킴
+		
+			target이 오른쪽에 있으면
+				이미지를 오른쪽을 보고있는 사진으로 바꿈
+			target이 왼쪽에 있으면
+				이미지를 왼쪽을 보고있는 사진으로 바꿈
+		target이 없으면
+		상태 = "move"
+		초기 공격 카운트 = 0
+		초기 공격 = 0
+	
+	-func move()
+		상태가 "attack"이면 return
+		
+		만약 플레이어가 오른쪽에 있으면
+			오른쪽으로 움직이고 
+			걸음 애니메이션 
+			상태 = "move"
+		만약 플레이어가 왼쪽에 있으면
+			왼쪽으로 움직이고 
+			걸음 애니메이션
+			상태 = "move"
+	
+	-func update()
+		self.move()
+		self.attack()
+		만약 hp가 0보다 작으면
+			플레이어.get_exp(self.경험치)
+			self.kill()
+			플레이어.총 죽인 적 += 1
+
+-class Zombie(Enemy) 
+	Enemy 클래스를 상속받음.
+
+-class Skeleton(Enemy)
+	Enemy 클래스를 상속받음.
+
+	-func attack()
+		target = attackable_sprites의 스프라이트들과 공격 범위 사각형과 충돌한 sprites 중 하나
+
+		target이 있으면 
+			상태 = "attack"
+			초기 공격을 안했으면
+				초기 공격 카운트 += 1, 
+				초기 공격 카운트가 초기 공격 속도보다 커지면
+					arrow객체 를 생성함
+
+			초기 공격을 했으면
+				공격 카운트 += 1,
+				공격 카운트가 공격 속도보다 커지면
+					arrow 객체를 생성함
+		
+			target이 오른쪽에 있으면
+				이미지를 오른쪽을 보고있는 사진으로 바꿈
+			target이 왼쪽에 있으면
+				이미지를 왼쪽을 보고있는 사진으로 바꿈
+		target이 없으면
+		상태 = "move"
+		초기 공격 카운트 = 0
+		초기 공격 = 0
+
+-class Arorw
+	all_sprites.add(self)
+	noncreature_sprites.add(self)
+	
+	-func attack()
+		attackable_sprites와 충돌하면 
+			가장 먼저 충돌한 sprite.hp -= self.damage
+			self.kill()
+	
+	-func move()
+		self.vector.x += self.delta_x
+		self.vecotr.y -= self delta_y
+
+		만약 self.vector.y가 516(바닥)보다 작으면
+			self.kill()
+
+	-func update()
+		self.move()
+		self.attack()
+
+-class Wall(Building)
+
+	-func upgrade()
+	만약 self.level이 self.max_level보다 작으면 
+		레벨 +=1
+		최대체력 증가
+		체력 회복
+		레벨업 가격 증가
+		만약 레벨이 최대 레벨이면
+			레벨업 가격 = None
+		아니라면
+			레벨업 가격 증가
+	
+	-func self_heal()
+	회복 카운터 +=1
+	만약 회복 카운터가 회복 속도보다 커지면
+		self.hp += 최대체력의 2%
+		만약 hp가 최대체력과 같으면
+			체력 = 최대체력과
+		회복 카운터 = 0
+	
+	-func update()
+		체력이 0보다 작으면 
+			self.kill()
+		만약 체력회복이 True라면
+			self.self_heal()
+setting.py
+pygame 초기화,시스템 설정, 스프라이트 이미지 가져오기,조작

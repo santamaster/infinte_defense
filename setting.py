@@ -90,7 +90,7 @@ BUILD_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\build.png").
 REPLAY_BUTTON = pg.transform.scale(pg.image.load("resources\\images\\replay.png").convert_alpha(),(50,50))
 GOTO_MAIN_MENU_BUTTON =pg.transform.scale(pg.image.load("resources\\images\\exit.png").convert_alpha(),(50,50))
 PLAYER_IMAGE_SIZE = (128,128)
-PLAYER_IMAGE_SPEED = 8/FPS
+PLAYER_IMAGE_SPEED = 6/FPS
 PLAYER_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\player1.png").convert_alpha(),PLAYER_IMAGE_SIZE)
 PLAYER_IMAGES =set_size(PLAYER_IMAGE_SIZE,\
     *[pg.image.load("resources\\images\\player{}.png".format(i)).convert_alpha() for i in range(2,3+1)])
@@ -101,12 +101,24 @@ PLAYER_IMAGES_L = [pg.transform.flip(image,True,False) for image in PLAYER_IMAGE
 COIN_IMAGE = pg.image.load("resources\\images\\gold1.png").convert_alpha()
 
 #ZOMBIE
-ZOMBIE_IMAGE_SIZE = (100,150)
-ZOMBIE_IMAGE = pg.image.load("resources\\images\\zombie.png").convert_alpha()
+ZOMBIE_IMAGE_SIZE = (128,128)
+ZOMBIE_IMAGE_SPEED = 1/FPS
+ZOMBIE_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\zombie1.png").convert_alpha(),ZOMBIE_IMAGE_SIZE)
+ZOMBIE_IMAGES = set_size(ZOMBIE_IMAGE_SIZE,\
+    *[pg.image.load("resources\\images\\zombie{}.png".format(i)).convert_alpha() for i in range(2,3+1)])
+
+ZOMBIE_IMAGE_L = pg.transform.flip(ZOMBIE_IMAGE,True,False)
+ZOMBIE_IMAGES_L = [pg.transform.flip(image,True,False) for image in ZOMBIE_IMAGES]
 
 #SKELETON
-SKELETON_IMAGE_SIZE = (100,150)
-SKELETON_IMAGE = pg.image.load("resources\\images\\zombie.png").convert_alpha()
+SKELETON_IMAGE_SIZE = (128,128)
+SKELETON_IMAGE_SPEED = 3/FPS
+SKELETON_IMAGE = pg.transform.scale(pg.image.load("resources\\images\\skeleton1.png").convert_alpha(),ZOMBIE_IMAGE_SIZE)
+SKELETON_IMAGES = set_size(SKELETON_IMAGE_SIZE,\
+    *[pg.image.load("resources\\images\\skeleton{}.png".format(i)).convert_alpha() for i in range(2,3+1)])
+
+SKELETON_IMAGE_L = pg.transform.flip(SKELETON_IMAGE,True,False)
+SKELETON_IMAGES_L = [pg.transform.flip(image,True,False) for image in SKELETON_IMAGES]
 SKELETON_ARROW_IMAGE = pg.image.load("resources\\images\\arrow.png").convert_alpha()
 SKELETON_ARROW_IMAGE_L = pg.transform.flip(SKELETON_ARROW_IMAGE,True,False)
 
