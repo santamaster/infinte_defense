@@ -26,7 +26,7 @@ class Player(pg.sprite.Sprite):
     max_level = 6
     hp = 1000
     vel = 10
-    required_exp = [20,200,400,800,1600]
+    required_exp = [20,200,400,600,1000]
     gold_cooldown = 1* FPS
     gold_output = 3
     start_gold = 1000
@@ -220,8 +220,8 @@ class Enemy(pg.sprite.Sprite):
         self.attack()
         if self.hp <= 0:
             if Enemy.get_gold:
-                self.player.gold +=5
-                Player.total_gold +=5
+                self.player.gold +=15
+                Player.total_gold +=15
                 Earn_gold_effect(self)
             self.player.get_exp(self.exp)
             ENEMY_DEAD_SOUND.play()
@@ -767,7 +767,7 @@ class FireballThrower(Building):
     attack_dmg = [4,6,10]
     hp_bar_width = 150
     attack_range = 600
-    first_attack_cooldown = 0.1*FPS
+    first_attack_cooldown = 0.01*FPS
     attack_cooldown = 0.1*FPS
     damage_rate = 1
     ball_height = (30,50)
@@ -853,7 +853,7 @@ class FireballThrower(Building):
 
 
 class Fireball(pg.sprite.Sprite):
-    time = 0.5*FPS
+    time = 0.3*FPS
     def __init__(self,damage,start_point,end_point,ball_height):
         super().__init__()
         all_sprites.add(self)
@@ -896,7 +896,7 @@ class Mine(Building):
     hp = [300,400,600]
     max_level = 3
     price = [200,350,500]
-    gold_output = [15,20,30]
+    gold_output = [15,25,35]
     gold_cooldown = 2 * FPS
     gold_cooldown_rate = 1
     hp_bar_width = 150

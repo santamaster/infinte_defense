@@ -17,7 +17,7 @@ SCREEN = pg.display.set_mode((WIDTH,HEIGHT))
 CLOCK = pg.time.Clock()
 pg.mixer.init()
 FPS = 60
-pg.display.set_caption("game_project")
+pg.display.set_caption("인피니트 디펜스")
 CAMERA_VEL = 10
 HP_FRAME_WIDTH = 400
 HP_FRAME_HEIGHT = 40
@@ -26,7 +26,7 @@ HP_FRAME_INTERVAL = 20
 #기본 설정
 PLAYER_JUMP_PW = 30
 GRAVITY = 3#중력
-REFUND_RATE = 0.7
+REFUND_RATE = 0.85
 MESSAGE_COOLDOWN = 1*FPS
 
 
@@ -59,12 +59,7 @@ def get_outline(image,outline_thickness=3,color=(255,255,255,255)):
     return mask.to_surface(setcolor=color,unsetcolor=(0,0,0,0))
 
 def blurSurf(surface, amt):
-    """
-    Blur the given surface by the given 'amount'.  Only values 1 and greater
-    are valid.  Value 1 = no blur.
-    """
-    if amt < 1.0:
-        raise ValueError("Arg 'amt' must be greater than 1.0, passed in value is %s"%amt)
+
     scale = 1.0/float(amt)
     surf_size = surface.get_size()
     scale_size = (int(surf_size[0]*scale), int(surf_size[1]*scale))

@@ -25,13 +25,13 @@ def reduce_enemy_damage():
 
 #플레이어 얻는 골드 증가
 def get_more_gold():
-    sp.Message("플레이어가 1초당 얻는 골드가 2배로 증가합니다.")
+    sp.Message("플레이어가 1초당 얻는 골드가 3배로 증가합니다.")
     for sprite in sp.player_sprites:
-        sprite.gold_output *=2  
+        sprite.gold_output *= 3  
     
 #적을 죽일 시 골드 획득
 def get_gold_when_kill_enemy():
-    sp.Message("적을 죽이면 5 골드를 획득합니다.")
+    sp.Message("적을 죽이면 15 골드를 획득합니다.")
     sp.Enemy.get_gold = 1
 
 class Poison:
@@ -119,7 +119,7 @@ def mine_faster():
 
 player_ability_list = []
 
-level_2_ability = [canon_increase_damage,canon_enhanced_attack,canon_infite_range,double_barrel,\
+level_2_ability = [canon_increase_damage,canon_enhanced_attack,double_barrel,\
     get_gold_when_kill_enemy,building_gold]
 def get_level_2_ability():
     if len(sp.mine_sprites) >= 2:
@@ -129,7 +129,7 @@ def get_level_2_ability():
         level_2_ability.append(attacking_wall)
     pass
 
-level_3_ability = [get_gold,reduce_enemy_damage, get_more_gold,get_gold_when_kill_enemy,poisoning,building_gold,wall_self_healing,attacking_wall,canon_increase_damage,\
+level_3_ability = [get_gold, get_more_gold,get_gold_when_kill_enemy,poisoning,building_gold,wall_self_healing,attacking_wall,canon_increase_damage,\
     canon_enhanced_attack,canon_infite_range,double_barrel,lava_shot,fast_shot,mine_faster]
 def get_level_3_ability():
 
@@ -182,8 +182,8 @@ def get_level_6_ability():
 ability_info = {player_health_recovery:["체력 회복","플레이어의 체력을 최대로 회복합니다"],\
                 get_gold:["일확천금","1000골드를 획득합니다"],\
                 reduce_enemy_damage:["적 약화","적의 공격력이 20% 감소합니다."],\
-                get_more_gold:["연금술사","플레이어가 1초당 얻는 골드가 2배 증가합니다."],\
-                get_gold_when_kill_enemy:["수금","적을 죽이면 5 골드를 획득합니다."],\
+                get_more_gold:["연금술사","플레이어가 1초당 얻는 골드가 3배 증가합니다."],\
+                get_gold_when_kill_enemy:["수금","적을 죽이면 15 골드를 획득합니다."],\
                 poisoning:["중독","매초 적이 최대 체력의 5%만큼 피해를 입습니다."],\
                 building_gold:["생산 기지","매초 건물 수만큼의 골드를 획득합니다."],\
 

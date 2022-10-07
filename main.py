@@ -50,23 +50,35 @@ def enemy_spawn(game_sec,player):
     elif game_sec <= 90:   #60~120초
         if random()*FPS <= 0.6:  #1초당 0.5마리
             if random() >= 0.5:
-                sp.Zombie(choice(spawn_location),player,2)
+                if random()>= 0.5:
+                    sp.Zombie(choice(spawn_location),player,1)
+                else:
+                    sp.Zombie(choice(spawn_location),player,2)
             else:
-                sp.Skeleton(choice(spawn_location),player,2)
+                if random() >= 0.5:
+                    sp.Skeleton(choice(spawn_location),player,1)
+                else:
+                    sp.Skeleton(choice(spawn_location),player,2)
     elif game_sec <=120:                   #120초 이후
-        if random()*FPS <= 1:    #1초당 1마리
+        if random()*FPS <= 0.8:    #1초당 1마리
+            if random() >= 0.5:
+                if random()>= 0.3:
+                    sp.Zombie(choice(spawn_location),player,1)
+                else:
+                    sp.Zombie(choice(spawn_location),player,2)
+            else:
+                if random() >= 0.3:
+                    sp.Skeleton(choice(spawn_location),player,1)
+                else:
+                    sp.Skeleton(choice(spawn_location),player,2)
+    elif game_sec <= 180:
+        if random()*FPS <= 1.2:
             if random() >= 0.5:
                 sp.Zombie(choice(spawn_location),player,2)
             else:
                 sp.Skeleton(choice(spawn_location),player,2)
-    elif game_sec <= 180:
-        if random()*FPS <= 1.6:
-            if random() >= 0.5:
-                sp.Zombie(choice(spawn_location),player,3)
-            else:
-                sp.Skeleton(choice(spawn_location),player,3)
     else:
-        if random()*FPS <= game_sec/90:#점점 빨라짐
+        if random()*FPS <= game_sec/150:#점점 빨라짐
             if random() >= 0.5:
                 sp.Zombie(choice(spawn_location),player,3)
             else:
@@ -686,7 +698,7 @@ def build(camera,player):
         pg.display.flip()
 
 
-msg_title = MYFONT.render("game_project",True,DEEP_PURPLE)
+msg_title = MYFONT.render("인피니트 디펜스",True,DEEP_PURPLE)
 msg_title_rect = msg_title.get_rect(center=(WIDTH/2,100))
 
 play_image = PLAY_FRAME
